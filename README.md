@@ -7,7 +7,7 @@ A Flutter finance app built for Pakistan: PKR budgets, offline-first expense tra
 ## MVP v1 — What is built now
 
 - Manual expense entry with categories: Food, Transport, Bills, Shopping, Health, Education, Other
-- Monthly budget in PKR, with total spent and remaining balance
+- Monthly budget in PKR, editable from the home screen, with total spent and remaining balance
 - Overspend alert in English and Urdu when spending passes 80% and 100% of the budget
 - Offline-first local storage — expenses are saved on the device, no internet needed
 - Clean Architecture: models, data store, and UI kept in separate layers
