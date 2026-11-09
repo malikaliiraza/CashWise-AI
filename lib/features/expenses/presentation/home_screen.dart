@@ -14,12 +14,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+  final _budgetController = TextEditingController();
   String _category = expenseCategories.first;
 
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _budgetController.dispose();
     super.dispose();
   }
 
@@ -44,6 +46,67 @@ class _HomeScreenState extends State<HomeScreen> {
     _titleController.clear();
     _amountController.clear();
     if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _saveBudget() async {
+    final amount = double.tryParse(_budgetController.text.trim());
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid budget above Rs. 0.')),
+      );
+      return;
+    }
+    await context.read<ExpenseStore>().setMonthlyBudget(amount);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Monthly budget updated to Rs. ${amount.toStringAsFixed(0)}.',
+        ),
+      ),
+    );
+  }
+
+  void _showBudgetSheet() {
+    _budgetController.text =
+        context.read<ExpenseStore>().monthlyBudgetPkr.toStringAsFixed(0);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Edit monthly budget',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _budgetController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Monthly budget (PKR)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _saveBudget,
+              child: const Text('Save budget'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showAddSheet() {
@@ -128,8 +191,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    'Budget: Rs. ${store.monthlyBudgetPkr.toStringAsFixed(0)}  •  Remaining: Rs. ${store.remaining.toStringAsFixed(0)}',
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Budget: Rs. ${store.monthlyBudgetPkr.toStringAsFixed(0)}  •  Remaining: Rs. ${store.remaining.toStringAsFixed(0)}',
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _showBudgetSheet,
+                        icon: const Icon(Icons.edit),
+                        tooltip: 'Edit budget',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
