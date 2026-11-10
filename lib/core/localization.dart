@@ -97,7 +97,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'Enter a title and a valid amount.',
       'enterValidBudget': 'Enter a valid budget above 0.',
       'language': 'Language',
-            'spendingByCategory': 'Spending by category',
+      'spendingByCategory': 'Spending by category',
     },
     categories: {
       'Food': 'Food',
@@ -137,7 +137,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'عنوان اور درست رقم درج کریں۔',
       'enterValidBudget': '0 سے زیادہ درست بجٹ درج کریں۔',
       'language': 'زبان',
-            'spendingByCategory': 'زمرہ کے لحاظ سے خرچ',
+      'spendingByCategory': 'زمرہ کے لحاظ سے خرچ',
     },
     categories: {
       'Food': 'کھانا',
@@ -177,7 +177,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'أدخل عنوانًا ومبلغًا صحيحًا.',
       'enterValidBudget': 'أدخل ميزانية صحيحة أكبر من 0.',
       'language': 'اللغة',
-            'spendingByCategory': 'الإنفاق حسب الفئة',
+      'spendingByCategory': 'الإنفاق حسب الفئة',
     },
     categories: {
       'Food': 'طعام',
@@ -217,7 +217,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'शीर्षक और सही राशि दर्ज करें।',
       'enterValidBudget': '0 से अधिक सही बजट दर्ज करें।',
       'language': 'भाषा',
-            'spendingByCategory': 'श्रेणी के अनुसार खर्च',
+      'spendingByCategory': 'श्रेणी के अनुसार खर्च',
     },
     categories: {
       'Food': 'भोजन',
@@ -257,7 +257,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'Introduce un título y una cantidad válida.',
       'enterValidBudget': 'Introduce un presupuesto válido mayor que 0.',
       'language': 'Idioma',
-            'spendingByCategory': 'Gasto por categoría',
+      'spendingByCategory': 'Gasto por categoría',
     },
     categories: {
       'Food': 'Comida',
@@ -297,7 +297,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'Saisissez un titre et un montant valide.',
       'enterValidBudget': 'Saisissez un budget valide supérieur à 0.',
       'language': 'Langue',
-            'spendingByCategory': 'Dépenses par catégorie',
+      'spendingByCategory': 'Dépenses par catégorie',
     },
     categories: {
       'Food': 'Nourriture',
@@ -337,7 +337,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': 'Bir başlık ve geçerli bir tutar girin.',
       'enterValidBudget': "0'dan büyük geçerli bir bütçe girin.",
       'language': 'Dil',
-            'spendingByCategory': 'Kategoriye göre harcama',
+      'spendingByCategory': 'Kategoriye göre harcama',
     },
     categories: {
       'Food': 'Yemek',
@@ -377,7 +377,7 @@ const List<AppLocale> appLocales = [
       'enterTitleValidAmount': '请输入标题和有效金额。',
       'enterValidBudget': '请输入大于0的有效预算。',
       'language': '语言',
-            'spendingByCategory': '按类别支出',
+      'spendingByCategory': '按类别支出',
     },
     categories: {
       'Food': '餐饮',
