@@ -5,6 +5,7 @@ import '../../../core/localization.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import '../models/expense.dart';
+import 'category_chart.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -348,6 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            if (store.expenses.isNotEmpty)
+              CategoryChartCard(store: store),
             Expanded(
               child: store.expenses.isEmpty
                   ? Center(
