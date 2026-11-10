@@ -1,12 +1,13 @@
-// CashWise AI — category spending chart (DRAFT for the 10:50 daily step,
-// Tue 10 Nov 2026). NOT yet copied into ~/workspace/cashwise-ai, NOT
-// published to GitHub, NOT run/tested here (no Flutter/Dart SDK in this VM).
+// CashWise AI — category spending chart.
 //
-// Place at: lib/features/expenses/presentation/category_chart.dart
-// Requires: fl_chart (add with `flutter pub add fl_chart` on the PC —
-// it resolves the latest version compatible with Flutter 3.47.5).
+// Pie chart of spending by category (fl_chart) + legend, in the current
+// locale. Requires fl_chart (see pubspec.yaml).
+//
 // API used (PieChart / PieChartData / PieChartSectionData) exists in
 // both fl_chart 0.69 and 1.x.
+//
+// Not yet run/tested on a device — run `flutter pub get`,
+// `flutter analyze`, then `flutter run -d chrome` on the PC.
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
