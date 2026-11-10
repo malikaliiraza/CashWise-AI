@@ -31,13 +31,13 @@ A Flutter finance app for everyone, in their own language and currency: offline-
 - Overspend alert in the selected language when spending passes 80% and 100% of the budget
 - Offline-first local storage — expenses are saved on the device, no internet needed
 - Clean Architecture: models, data store, and UI kept in separate layers
+- Category spending chart (fl_chart pie chart + legend) — totals per category in the selected language and currency
 
 ## What is NOT in v1 / v2
 
 - Receipt scan (OCR)
 - Firebase sync
 - AI cash-flow prediction
-- Charts (planned next, after the v2 international redesign)
 
 Those are roadmap features, listed below, not claimed as built.
 
@@ -53,7 +53,7 @@ Those are roadmap features, listed below, not claimed as built.
 
 ## Tech Stack
 
-Flutter, Dart, Clean Architecture, SharedPreferences (local storage), Provider (state management).
+Flutter, Dart, Clean Architecture, SharedPreferences (local storage), Provider (state management), fl_chart (category chart).
 
 ## Setup
 
@@ -77,6 +77,7 @@ lib/
     data/expense_store.dart # Offline local storage (SharedPreferences) + locale
     presentation/
       home_screen.dart      # Budget, list, add-expense UI, language menu
+      category_chart.dart  # Spending-by-category pie chart + legend
 ```
 
 ## License
