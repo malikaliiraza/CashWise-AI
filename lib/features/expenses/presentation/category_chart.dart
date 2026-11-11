@@ -81,11 +81,11 @@ class CategoryChartCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 180,
+              height: 200,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 2,
-                  centerSpaceRadius: 40,
+                  centerSpaceRadius: 44,
                   pieTouchData: PieTouchData(enabled: false),
                   sections: entries.map((entry) {
                     final fraction =
@@ -94,7 +94,7 @@ class CategoryChartCard extends StatelessWidget {
                       value: entry.value,
                       color: categoryChartColors[entry.key] ??
                           CashWiseTheme.secondaryText,
-                      radius: 60,
+                      radius: 64,
                       showTitle: fraction >= 0.05,
                       title: '${(fraction * 100).round()}%',
                       titleStyle: const TextStyle(
