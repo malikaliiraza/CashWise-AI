@@ -2,36 +2,31 @@
 
 > **v5.8 — published 2026-11-11** (batch upload of all work from v3 to v5.8). v1 and v3.3 were run-tested on the developer's PC; the full v5.8 build has not been run/tested here (no Flutter SDK in this VM).
 
-A Flutter finance app for everyone, in their own language and currency: offline-first expense tracking with language + currency switching, and a Clean Light theme (white + emerald, soft premium).
+A Flutter finance app for everyone, in their own language: offline-first expense tracking in English and Urdu, with a premium deep marine navy + brass theme.
 
 **Unique feature — Cash-Flow Predictor (v3):** predicts, before the month ends, when money will run out and warns before overspending, in the user's own language — from daily average spend, no server or AI model yet. Receipt scan (OCR) and Firebase sync are also on the roadmap.
 
 ## v2 — International
 
-- **2 languages — English and Urdu only** (since v4.6, user's choice) — pick a language in the drawer and the whole app switches: every label, alert, category and amount, in that language's own script only. No mixed-language text, no Roman Urdu, no Roman English. Urdu is RTL. The picker shows only "English" and "اردو" — no country names, no currency codes (v4.8). Amounts show "Rs." in English and "روپے" in Urdu.
-  | Language | Country | Currency | Default monthly budget |
-  |---|---|---|---|
-  | English | USA | USD ($) | $500 |
-  | اردو | Pakistan | PKR (Rs.) | Rs. 50,000 |
-  | العربية | Saudi Arabia | SAR (ر.س) | 2,000 ر.س |
-  | हिन्दी | India | INR (₹) | ₹40,000 |
-  | Español | Spain | EUR (€) | €500 |
-  | Français | France | EUR (€) | €500 |
-  | Türkçe | Türkiye | TRY (₺) | ₺20,000 |
-  | 中文 | China | CNY (¥) | ¥3,500 |
-- **Currency follows the language** — amounts are shown with the selected currency's symbol. The language choice is saved offline.
-- **Right-to-left layout** for Urdu and Arabic; left-to-right for the other languages.
-- **Clean Light theme** — white background, soft off-white surfaces, emerald primary (#059669), dark slate text, white cards with soft shadows and rounded corners. The v1 teal/gold theme is gone.
+- **2 languages — English and Urdu only** (since v4.6, user's choice) — pick a language in the language slider and the whole app switches: every label, alert, category and amount, in that language's own script only. No mixed-language text, no Roman Urdu, no Roman English. Urdu is RTL. The picker shows only "English" and "اردو" — no country names, no currency codes (v4.8).
+  | Language | Amounts shown as |
+  |---|---|
+  | English | Rs. (e.g. Rs. 2,383) |
+  | اردو | روپے (e.g. 2,383 روپے) |
+- **Amounts always carry Rs. / روپے** (since v5.8) — every amount in the app, in English and Urdu. The language choice is saved offline.
+- **Right-to-left layout** for Urdu; left-to-right for English.
+- **Theme** — deep marine navy + brass (light theme warm gold/brass, dark theme warm charcoal-brown). The v2 Clean Light theme (white + emerald) and the v1 teal/gold theme are gone.
 - Existing expenses are kept when switching language — only the display changes.
+- *History: v2 (2026-11-09) originally shipped 8 languages, each with its own currency (English/USD, Urdu/PKR, Arabic/SAR, Hindi/INR, Spanish/EUR, French/EUR, Turkish/TRY, Chinese/CNY). The other 6 languages were removed in v4.6 at the user's choice — the app now targets a Pakistani audience in English and Urdu only.*
 
 ## MVP v1 — What is built now
 
 - Manual expense entry with categories: Food, Transport, Bills, Shopping, Health, Education, Other
-- Monthly budget in the selected currency, editable from the home screen, with total spent and remaining balance
+- Monthly budget (Rs.), editable from the home screen, with total spent and remaining balance
 - Overspend alert in the selected language when spending passes 80% and 100% of the budget
 - Offline-first local storage — expenses are saved on the device, no internet needed
 - Clean Architecture: models, data store, and UI kept in separate layers
-- Category spending chart (fl_chart pie chart + legend) — totals per category in the selected language and currency
+- Category spending chart (fl_chart pie chart + legend) — totals per category in the selected language, amounts in Rs. / روپے
 - Cash-flow prediction (v3) — daily average spend, projected month-end spend, and the date the budget runs out, in the selected language
 - Expense edit — tap any expense to change its title, amount or category (same sheet as add, prefilled)
 - Search + category filter — search expenses by title, filter by category with chips, in the selected language

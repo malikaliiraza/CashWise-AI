@@ -1,5 +1,5 @@
 name: cashwise_ai
-description: "International Flutter finance coach — 8 languages, local currencies, offline-first expenses, overspend alerts."
+description: "Flutter finance coach — offline expenses, cash-flow predictor, Loan Ledger with reminders, English/Urdu, Rs. amounts."
 publish_to: 'none'
 version: 0.1.0+1
 
