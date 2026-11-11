@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'core/notification_service.dart';
 import 'core/theme.dart';
 import 'features/expenses/data/expense_store.dart';
+import 'features/auth/presentation/login_screen.dart';
+import 'features/auth/presentation/welcome_transition_screen.dart';
 import 'features/expenses/presentation/home_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Budget alerts as mobile notifications (no-op on web).
+  await NotificationService.init();
   runApp(const CashWiseApp());
 }
 
@@ -14,7 +20,13 @@ class CashWiseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ExpenseStore()..load(),
+      create: (_) {
+        final store = ExpenseStore();
+        // After loading, fire the once-a-day Loan Ledger due
+        // reminders (overdue / due tomorrow) as a phone alert.
+        store.load().then((_) => store.maybeNotifyDueReminders());
+        return store;
+      },
       child: Consumer<ExpenseStore>(
         builder: (context, store, _) {
           final locale = store.locale;
@@ -22,6 +34,9 @@ class CashWiseApp extends StatelessWidget {
             title: 'CashWise AI',
             debugShowCheckedModeBanner: false,
             theme: CashWiseTheme.light,
+            darkTheme: CashWiseTheme.dark,
+            themeMode:
+                store.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             locale: Locale(locale.code),
             // Right-to-left layout for Urdu and Arabic, left-to-right
             // for every other locale.
@@ -30,7 +45,13 @@ class CashWiseApp extends StatelessWidget {
                   locale.isRtl ? TextDirection.rtl : TextDirection.ltr,
               child: child!,
             ),
-            home: const HomeScreen(),
+            // Login / register first — the app never opens
+            // straight into the expenses (v4.1).
+            home: !store.isLoggedIn
+                ? const LoginScreen()
+                : store.showWelcome
+                    ? const WelcomeTransitionScreen()
+                    : const HomeScreen(),
           );
         },
       ),
