@@ -1,4 +1,4 @@
-# CashWise AI — International Finance Coach
+# CashWise AI — Finance Coach
 
 > **v5.8 — published 2026-11-11** (batch upload of all work from v3 to v5.8). v1 and v3.3 were run-tested on the developer's PC; the full v5.8 build has not been run/tested here (no Flutter SDK in this VM).
 
@@ -6,7 +6,7 @@ A Flutter finance app for everyone, in their own language: offline-first expense
 
 **Unique feature — Cash-Flow Predictor (v3):** predicts, before the month ends, when money will run out and warns before overspending, in the user's own language — from daily average spend, no server or AI model yet. Receipt scan (OCR) and Firebase sync are also on the roadmap.
 
-## v2 — International
+## Languages — English and Urdu only
 
 - **2 languages — English and Urdu only** (since v4.6, user's choice) — pick a language in the language slider and the whole app switches: every label, alert, category and amount, in that language's own script only. No mixed-language text, no Roman Urdu, no Roman English. Urdu is RTL. The picker shows only "English" and "اردو" — no country names, no currency codes (v4.8).
   | Language | Amounts shown as |
@@ -19,7 +19,9 @@ A Flutter finance app for everyone, in their own language: offline-first expense
 - Existing expenses are kept when switching language — only the display changes.
 - *History: v2 (2026-11-09) originally shipped 8 languages, each with its own currency (English/USD, Urdu/PKR, Arabic/SAR, Hindi/INR, Spanish/EUR, French/EUR, Turkish/TRY, Chinese/CNY). The other 6 languages were removed in v4.6 at the user's choice — the app now targets a Pakistani audience in English and Urdu only.*
 
-## MVP v1 — What is built now
+## What is built now — v5.8
+
+Current state is v5.8. The bullets below are the version history — a few details changed again later (v4.9's plain numbers were reversed by v5.8's Rs.-always rule; Royal Blue was replaced by navy + brass).
 
 - Manual expense entry with categories: Food, Transport, Bills, Shopping, Health, Education, Other
 - Monthly budget (Rs.), editable from the home screen, with total spent and remaining balance
@@ -47,7 +49,6 @@ A Flutter finance app for everyone, in their own language: offline-first expense
 - Complete v5.3 — Separate light theme for the whole app: AppBar headers and the welcome hero are now soft light blue with dark text in light mode (navy only in dark mode); AppBar titles follow the header again. Every sub-page (Details, Budget, Add Expense, expense detail, Loan Ledger hub, Receivables/Payables, Loan Ledger Summary) has a Home button in the AppBar that jumps straight home — the back arrow still goes to the parent category home, and only the Budget/Loan Ledger home screens go back to home. Continue with Google on the login/register screen: picks a Google account and creates the local account from its name + email (no password stored). NEEDS a Google Cloud OAuth Client ID to actually work — placeholder in lib/core/google_auth_service.dart (kGoogleClientId) + web/index.html meta tag, with setup steps in the service file; until the ID is pasted, the button shows "Google sign-in did not complete." 2 new localisation keys x 2 locales, new dependency google_sign_in ^6.2.1 (run flutter pub get).
 - Complete v5.4 — Light theme has no blue at all: warm gold/brass replaces royal blue everywhere in light mode (buttons, chips, inputs, progress, headers, hero, slider pills, icons) via a new lightAccent + accentFor(context); dark mode keeps its blue. Budget icon is gold now (was blue). Language slider labels are styled (letterspaced English, Nastaliq اردو) and its pill is gold in light / navy in dark. Urdu mode shows the user's name in Urdu script (Malik Ali Raza → ملک علی رضا, via a transliteration map for common name parts) and the welcome line uses the proper Urdu comma (،) inside the translation, so it renders on the right side. Password eye icons fixed: slashed eye = hidden, plain eye = showing. Stylish date picker (rounded 24px dialog, theme colours, Inter font) on Add Expense, expense edit and Udhar. Google sign-in still needs the Client ID — the button, flow and setup steps are built; Google does not allow sign-in without a Client ID, so the user must create one (free, ~3 minutes, steps in APPLY.md) or do it together in the browser. 1 new localisation key (welcomeName) x 2 locales.
 - Complete v5.5 — Loan Ledger due dates, times, partial payments and reminders: every entry can carry a due date + time ("this payment is due on this date at this time"); partial payments are recorded with their date (5,000 owed, 1,000 paid on 12/11 → 4,000 remaining, entry settles itself at zero); outstanding totals now count only the remaining amount. Reminders: overdue entries (due moment passed — from 12 AM after the due date when no time was set) and entries due within a week / tomorrow show in a reminders card on Home and on the Loan Ledger hub, plus a once-a-day mobile notification on phones (in-app banner on web). Loan Ledger Summary now has separate Receivables and Payables sections, each person with total, paid so far, remaining and next due date. Tapping any entry opens a detail sheet with full details, payment history, an add-payment form and due date/time editing. Details (Statistics) expense rows now show a visible edit button. The Home button is removed from all sub-page AppBars (user changed his mind). Dark mode is now warm and professional like the light theme (warm charcoal + gold, no bright blue glow, softer shadows). The calendar is a custom fixed-size dialog (always 6x7 = 42 cells, 340x460, same size every month). Name map extended (Muheeb → محیب and ~25 more common names). 20 new localisation keys x 2 locales.
-- Complete v5.9 (draft) — Multi-budget (edit the active budget + add another budget; every budget has its own expenses, totals and alerts, switchable from Budget home chips / Set budget / History); Rs. prefix inside amount input fields; restyled home category cards; budget warnings live in the Reminders system (badge, swipe-to-dismiss); calendar/time pickers are modal (no background scroll) and clamp dates (no future expense/payment, no past loan date/due date); buttons flat slider gold, no dark glow; full Urdu audit (calendar months/weekdays/buttons now Urdu in Urdu mode); language moved from the home AppBar into the account menu; home/drawer reminders short (max 2 + arrow), details on tap; History page (budgets, loan history, deleted items with Restore); loan cards redesigned (Payable / Mark / Edit in one row, bin icon below Payable); Record Payment is the paid/received option (partial works); reminders say exact days ("Due in 4 days", never "one week left" — Flutter already did; live fixed too); swipe-to-dismiss reminders/warnings in drawer + Reminders page; opening the drawer Reminders section/arrow clears the badge.
 - Complete v5.8 — Amounts always carry Rs. / روپے (reverses the v4.9 plain-numbers rule — user asked for Rs. always); unread-reminder badge on the hamburger menu (clears when the Reminders page is opened; only new reminders notify); Record Payment screen (full page: amount + date + time + weekday, full payment history with date/day/time — partial payments work even when not complete); time picker reworked (big selected time, hour/minute steppers with hold-to-repeat, no wall of numbers); Delete is an icon everywhere now (expense detail button, detail-sheet button next to Mark), never the written word. PartialPayment now keeps timeMinutes (backwards-compatible JSON).
 - Complete v5.7.3 — Urdu name edit (Edit name shows an Urdu-name field in Urdu mode; the typed Urdu spelling is saved and shown instead of the transliteration) + full About (what the app does, all features, what's new in this version — updated with every version) + delete icons everywhere (every expense row, every loan entry, every single payment in the detail sheet, and a Delete button in the detail sheet), each asking once to confirm. Settled entries keep their lock: delete is disabled until marked pending again. Removing a payment that settled an entry puts it back to pending.
 - Complete v5.7.2 — Welcome subtitle rewritten, fully professional and premium: "Your money, beautifully organized — every budget and every loan, always in your hands." (Urdu: "آپ کا پیسہ، خوبصورتی سے منظم — ہر بجٹ اور ہر قرض، ہمیشہ آپ کے ہاتھ میں۔")
@@ -55,7 +56,7 @@ A Flutter finance app for everyone, in their own language: offline-first expense
 - Complete v5.7 — Dedicated Reminders page (overdue first, then due soon) opened from the Home card, the Loan Ledger hub card, or "View all reminders" in the drawer; tapping one reminder opens its detail sheet. The reminders card now sits at the very top of Home, above the hero, so payments are visible without scrolling. Reminders are also a section in the drawer (with a count badge). Names: every person's name converts in Urdu mode — loan entries (Ahmad → احمد) in lists, detail sheet, summary, reminders and notifications, not just the account name; due times are Urdu too (Urdu digits + صبح/دوپہر/شام/رات); the account menu has Edit name. AI Predictor: no expenses → an amber alert + an Add Expense button; with expenses the category pie chart shows under the prediction. (Details already had an Add Expense button on its Expenses tab.) Loan entries: the record-payment action is called "Payable" again; on a settled entry Mark pending is a solid gold button (clearly clickable) and Edit/Delete/due-edit/Payable are locked, swipe-to-delete disabled too. Time picker: a styled fixed-size picker like the calendar (hour/minute wheels, AM/PM switch, Urdu digits in Urdu mode). Drawer: a floating panel now (transparent drawer + card with margins all round, 26px corners, deep shadow) — never full-screen. Navigation: every page change plays a visible transition (slide + fade + slight scale, 350ms). Roman English is gone from the app: every user-facing string is proper English or Urdu script only (audit found no Roman Urdu in any label, alert, toast or guide).
 - Complete v5.6 — General transliteration system: any Roman name converts to Urdu script (dictionary of ~100 common names/words wins first for exact spellings; anything else goes through phonetic fallback rules — digraphs, dropped short vowels, kept long/final vowels — so ANY name converts, not just listed ones). Brand name follows the language too: "CashWise AI" → "کیش وائز اے آئی" in Urdu mode (AppBar, drawer header, login screen, About dialog). Drawer is now narrower (290px, not full screen), rounded right corners, and its content fades + slides in when it opens. After creating an account or signing in, an animated welcome screen plays (logo scales in with gold glow, "Welcome, <name>" slides up, gold bar grows, ~1.8s) before home; returning users skip it. Account menu is now a professional card anchored under the avatar (profile header with name + email, divider, Sign out). The Google setup guide panel is a live-web-only element — nothing to remove in Flutter.
 
-## What is NOT in v1 / v2 / v3
+## Not built yet — roadmap only
 
 - Receipt scan (OCR)
 - Firebase sync
@@ -95,13 +96,13 @@ Those are roadmap features, listed below, not claimed as built.
 | v5.7.3 | Urdu name edit, full About (updated per version), delete icons everywhere + confirm — published 2026-11-11 |
 | v5.8 | Rs. / روپے on every amount, unread reminder badge, Record Payment screen (date+time+day), clean time picker, Delete icon-only — published 2026-11-11 |
 | v5.9 | Multi-budget + edit/add budget, History page, warnings in Reminders, date clamps, Urdu audit, compact reminders, loan card redesign, flat gold buttons — draft 2026-11-11, NOT published, NOT run/tested here |
-| v4 | Receipt scan (OCR) for automatic entry |
-| v5 | Firebase sync across devices |
-| v6 | Full AI Cash-Flow Predictor — server / ML model, learns spending patterns |
+| Future | Receipt scan (OCR) for automatic entry |
+| Future | Firebase sync across devices |
+| Future | Full AI Cash-Flow Predictor — server / ML model, learns spending patterns |
 
 ## Tech Stack
 
-Flutter, Dart, Clean Architecture, SharedPreferences (local storage), Provider (state management), fl_chart (category chart).
+Flutter, Dart, Clean Architecture, SharedPreferences (local storage), Provider (state management), fl_chart (category chart), google_fonts, flutter_local_notifications (reminders + alerts), google_sign_in (optional Google sign-in).
 
 ## Setup
 
@@ -110,7 +111,7 @@ flutter pub get
 flutter run
 ```
 
-Requires Flutter 3.0 or later. No API key or account is needed for v1 — all data stays on the device.
+Requires Flutter 3.0 or later. No account is needed — all data stays on the device. Google sign-in is optional and needs a free Google Cloud OAuth Client ID (see `lib/core/google_auth_service.dart`).
 
 ## Project Structure
 
@@ -118,13 +119,12 @@ Requires Flutter 3.0 or later. No API key or account is needed for v1 — all da
 lib/
   main.dart                 # App entry, theme, locale + RTL wiring
   core/
-    theme.dart              # Themes (light/dark, Royal Blue + gold)
+    theme.dart              # Themes (light/dark, deep marine navy + brass)
     localization.dart       # English + Urdu strings, categories, currency (Rs. / روپے)
     confirm_dialog.dart     # Shared confirm dialog (delete actions)
     gradient_button.dart    # Gradient primary buttons
     page_transitions.dart   # Fade + zoom page transitions
     styled_date_picker.dart # Styled calendar + time picker
-    language_slider.dart    # (see presentation) language slider
     roman_urdu.dart         # Name transliteration English -> Urdu script
     notification_service.dart # Local notifications (reminders, alerts)
     google_auth_service.dart  # Google sign-in (needs a Google Client ID)
@@ -144,6 +144,7 @@ lib/
       expense_detail_screen.dart # Expense detail + edit/delete
       statistics_screen.dart    # Statistics page
       category_chart.dart   # Spending-by-category pie chart + legend
+      category_style.dart   # Category colours + icons
       cashflow_predictor.dart # Local cash-flow prediction card
       language_slider.dart / theme_slider.dart # EN/اردو + light/dark sliders
       udhar_screen.dart / udhar_list_screen.dart / udhar_detail_sheet.dart # Loan Ledger
