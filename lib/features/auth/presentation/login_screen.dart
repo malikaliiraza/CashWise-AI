@@ -20,7 +20,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/google_auth_service.dart';
 import '../../../core/theme.dart';
-import '../data/expense_store.dart';
+import '../../expenses/data/expense_store.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: CashWiseTheme.accentFor(context),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           store.displayBrand,
                           textAlign: TextAlign.center,
                           style: TextStyle(
