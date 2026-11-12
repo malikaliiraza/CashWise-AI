@@ -11,7 +11,7 @@ import 'theme.dart';
 
 Future<bool> confirmDelete(
   BuildContext context,
-  AppStrings strings,
+  AppLocale strings,
   String itemLabel,
 ) async {
   final confirmed = await showDialog<bool>(
