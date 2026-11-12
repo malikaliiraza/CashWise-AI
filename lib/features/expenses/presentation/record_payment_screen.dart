@@ -292,8 +292,9 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                                             entry.id, e.key);
                                   },
                         ),
-                      );
-                    })),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
