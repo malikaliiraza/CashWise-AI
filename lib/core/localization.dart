@@ -15,7 +15,7 @@ class AppLocale {
   final double defaultBudget;
   final bool isRtl;
   final Map<String, String> strings;
-  final Map<String, String> categories;
+  final Map<String, String> categoryNames;
 
   const AppLocale({
     required this.code,
@@ -24,7 +24,7 @@ class AppLocale {
     required this.defaultBudget,
     required this.isRtl,
     required this.strings,
-    required this.categories,
+    required this.categoryNames,
   });
 
   String _get(String key) => strings[key] ?? key;
@@ -182,7 +182,6 @@ class AppLocale {
   String get deletedItems => _get('deletedItems');
   String get restore => _get('restore');
   String get noDeletedItems => _get('noDeletedItems');
-  String get language => _get('language');
   String get today => _get('today');
   String get ok => _get('ok');
   String get warning80 => _get('warning80');
@@ -209,7 +208,7 @@ class AppLocale {
       _get('budgetUpdated').replaceAll('{amount}', amount);
 
   /// Translated display name for an internally-stored English category key.
-  String categoryName(String key) => categories[key] ?? key;
+  String categoryName(String key) => categoryNames[key] ?? key;
 
   /// Label for an amount field — no currency code shown (v4.8).
   String get amountLabel => amount;
@@ -370,7 +369,6 @@ const List<AppLocale> appLocales = [
       'deletedItems': 'Deleted items',
       'restore': 'Restore',
       'noDeletedItems': 'Nothing deleted yet.',
-      'language': 'Language',
       'today': 'Today',
       'ok': 'OK',
       'warning80': 'Warning: 80% of your budget has been used.',
@@ -396,7 +394,7 @@ const List<AppLocale> appLocales = [
       'updateExpense': 'Update expense',
       'noMatchingExpenses': 'No expenses match your search.',
     },
-    categories: {
+    categoryNames: {
       'Food': 'Food',
       'Transport': 'Transport',
       'Bills': 'Bills',
@@ -557,7 +555,6 @@ const List<AppLocale> appLocales = [
       'deletedItems': 'حذف شدہ اشیاء',
       'restore': 'بحال کریں',
       'noDeletedItems': 'ابھی تک کچھ حذف نہیں ہوا۔',
-      'language': 'زبان',
       'today': 'آج',
       'ok': 'ٹھیک ہے',
       'warning80': 'انتباہ: آپ کے بجٹ کا 80٪ استعمال ہو چکا ہے۔',
@@ -583,7 +580,7 @@ const List<AppLocale> appLocales = [
       'updateExpense': 'خرچ اپ ڈیٹ کریں',
       'noMatchingExpenses': 'تلاش سے کوئی خرچ نہیں ملا۔',
     },
-    categories: {
+    categoryNames: {
       'Food': 'کھانا',
       'Transport': 'نقل و حمل',
       'Bills': 'بل',
