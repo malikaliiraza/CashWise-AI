@@ -2,9 +2,26 @@
 
 > **v5.9 — published 2026-11-12** (multi-budget + History page; also completes the v5.8 batch — the History page file and the compile fixes that stopped `flutter run` are now in). v1 and v3.3 were run-tested on the developer's PC; the v5.9 source compiled there with no Dart errors on 2026-11-12 (Chrome debug-service connection still pending); the full app has not been run/tested here (no Flutter SDK in this VM).
 
-A Flutter finance app for everyone, in their own language: offline-first expense tracking in English and Urdu, with a premium deep marine navy + brass theme.
+Your money, beautifully organized — budgets, expenses, loans and reminders, all in one place, fully offline.
 
 **Unique feature — Cash-Flow Predictor (v3):** predicts, before the month ends, when money will run out and warns before overspending, in the user's own language — from daily average spend, no server or AI model yet. Receipt scan (OCR) and Firebase sync are also on the roadmap.
+
+## About
+
+CashWise AI is a personal finance companion built for everyday money in Pakistan. Set monthly budgets — one or several — track every expense by category, lend and borrow with due dates, times and partial payments in the Loan Ledger, and get reminded before a payment falls due. A local cash-flow predictor shows when your budget will run out, before it happens. Everything works offline, in English or Urdu, with your data staying on your device.
+
+**What it does**
+
+- Monthly budgets with 80% and 100% alerts, each budget with its own expenses and totals
+- Expenses with categories, search, filters and a pie chart of where the money goes
+- Loan Ledger — Receivables and Payables, due dates and times, partial payments, full history
+- Reminders for overdue and upcoming payments, with an unread badge
+- AI cash-flow predictor — daily average, projected month-end spend and run-out date
+- English and Urdu throughout, right-to-left layout for Urdu, light and dark themes
+
+**Privacy** — your budgets, expenses and loans are stored only on your device. CashWise AI never uploads your financial data anywhere.
+
+Built with Flutter and Dart, Clean Architecture.
 
 ## Languages — English and Urdu only
 
