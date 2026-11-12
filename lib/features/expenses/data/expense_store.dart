@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/localization.dart';
@@ -161,7 +161,7 @@ class ExpenseStore extends ChangeNotifier {
     if (!_dismissedReminderKeys.add(_reminderKey(entry))) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-        _dismissedReminderKey, _dismissedReminderKeys.toList());
+        _dismissedRemindersKey, _dismissedReminderKeys.toList());
     notifyListeners();
   }
 
@@ -356,6 +356,7 @@ class ExpenseStore extends ChangeNotifier {
 
   bool get isLoggedIn => _isLoggedIn;
   String get userName => _userName;
+  String get userEmail => _userEmail;
 
 
 
