@@ -60,6 +60,7 @@ class CashWiseTheme {
   static const Color secondaryText = Color(0xFF64748B); // slate 500
   static const Color danger = Color(0xFFDC2626);
   static const Color warning = Color(0xFFD97706);
+  static const Color success = Color(0xFF16A34A); // green: paid / settled
 
   // Dark mode surfaces — softened (v4.5): the old deep slate + bright
   // blue accent was too harsh on the eyes at night.
