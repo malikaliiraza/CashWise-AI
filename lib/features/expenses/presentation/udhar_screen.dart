@@ -426,7 +426,7 @@ class _UdharScreenState extends State<UdharScreen> {
                     const SizedBox(height: 16),
                     Card(
                       child: ListTile(
-                        leading: const CircleAvatar(
+                        leading: CircleAvatar(
                           backgroundColor: CashWiseTheme.accentSoft,
                           foregroundColor: CashWiseTheme.accentFor(context),
                           child: Icon(Icons.arrow_upward),
@@ -449,7 +449,7 @@ class _UdharScreenState extends State<UdharScreen> {
                   const SizedBox(height: 12),
                   Card(
                     child: ListTile(
-                      leading: const CircleAvatar(
+                      leading: CircleAvatar(
                         backgroundColor: CashWiseTheme.accentSoft,
                         foregroundColor: CashWiseTheme.accentFor(context),
                         child: Icon(Icons.arrow_downward),
