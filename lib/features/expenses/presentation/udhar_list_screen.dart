@@ -12,10 +12,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/confirm_dialog.dart';
+import '../../../core/delete_icon_button.dart';
 import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import '../models/udhar_entry.dart';
+import 'add_reminder_screen.dart';
 import 'record_payment_screen.dart';
 import 'udhar_detail_sheet.dart';
 import 'udhar_screen.dart';
@@ -46,8 +48,7 @@ class UdharListScreen extends StatelessWidget {
       }
       if (entry.dueDate == null) return strings.noDueDate;
       final time = store.formatDueTime(entry);
-      return '${entry.dueDate!.day}/${entry.dueDate!.month}/'
-          '${entry.dueDate!.year}'
+      return '${store.formatDate(entry.dueDate!)}'
           '${time == null ? '' : ', $time'}';
     }
 
@@ -72,6 +73,9 @@ class UdharListScreen extends StatelessWidget {
                     onPressed: onPressed,
                     child: Text(
                       label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -85,6 +89,9 @@ class UdharListScreen extends StatelessWidget {
                     onPressed: onPressed,
                     child: Text(
                       label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 13),
                     ),
                   ),
@@ -157,18 +164,78 @@ class UdharListScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        store.formatAmount(entry.amountPkr),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      // Amount with the small bin icon directly
+                      // below it (v6.0) — never a delete button —
+                      // and a bell for "Set reminder" (v7.1).
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            store.formatAmount(entry.amountPkr),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Set reminder: opens the form
+                              // prefilled with this person and
+                              // the amount still owed.
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.add_alert,
+                                  size: 20,
+                                ),
+                                tooltip: strings.setReminder,
+                                color: CashWiseTheme.accentFor(context),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    slideRoute(
+                                      AddReminderScreen(
+                                        initialPerson: store.displayPerson(
+                                            entry.person),
+                                        initialAmount: entry.remaining,
+                                        entryId: entry.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              // Small bin icon with a hover effect
+                              // (v7.0) — red circle + slightly bigger
+                              // icon while the pointer is over it.
+                              DeleteIconButton(
+                                tooltip: strings.delete,
+                                // Settled entries are locked: delete
+                                // is disabled until marked pending.
+                                onPressed: entry.settled
+                                    ? null
+                                    : () async {
+                                        final confirmed =
+                                            await confirmDelete(
+                                          context,
+                                          strings,
+                                          store.displayPerson(
+                                              entry.person),
+                                        );
+                                        if (confirmed) {
+                                          await store
+                                              .removeUdhar(entry.id);
+                                        }
+                                      },
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${entry.date.day}/${entry.date.month}/${entry.date.year}'
+                    '${store.formatDate(entry.date)}'
                     ' • ${strings.dueDate}: ${dueLabel(entry)}',
                     style: TextStyle(
                       color: isOverdue
@@ -192,8 +259,12 @@ class UdharListScreen extends StatelessWidget {
                   ],
                   const SizedBox(height: 12),
                   // All three actions in ONE row: Payable, Mark
-                  // settled/pending, Edit.
-                  Row(
+                  // settled/pending, Edit — one fixed height, so
+                  // a long Urdu label never makes one button
+                  // taller than the others (v6.0).
+                  SizedBox(
+                    height: 42,
+                    child: Row(
                     children: [
                       actionButton(
                         label: strings.addPayment,
@@ -228,34 +299,6 @@ class UdharListScreen extends StatelessWidget {
                               },
                       ),
                     ],
-                  ),
-                  // The bin icon sits BELOW the Payable button,
-                  // on the left — never the written word.
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.delete_outline,
-                        size: 20,
-                        color: entry.settled
-                            ? CashWiseTheme.secondaryText
-                            : CashWiseTheme.danger,
-                      ),
-                      tooltip: strings.delete,
-                      // Settled entries are locked: delete is
-                      // disabled until marked pending again.
-                      onPressed: entry.settled
-                          ? null
-                          : () async {
-                              final confirmed = await confirmDelete(
-                                context,
-                                strings,
-                                store.displayPerson(entry.person),
-                              );
-                              if (confirmed) {
-                                await store.removeUdhar(entry.id);
-                              }
-                            },
                     ),
                   ),
                 ],
@@ -272,6 +315,20 @@ class UdharListScreen extends StatelessWidget {
           decoration: CashWiseTheme.headerGradientOf(context),
         ),
         title: Text(isLent ? strings.moneyLent : strings.moneyBorrowed),
+      ),
+      // Add on the page itself (v6.0): Receivables adds a
+      // receivable, Payables adds a payable — no detour through
+      // Details.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(
+            slideRoute(UdharScreen(initialIsLent: isLent)),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: Text(
+          isLent ? strings.addReceivable : strings.addPayable,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(

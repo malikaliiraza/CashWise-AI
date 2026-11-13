@@ -23,7 +23,12 @@ class UdharScreen extends StatefulWidget {
   /// entry (opened from a loan card's Edit button).
   final UdharEntry? entry;
 
-  const UdharScreen({super.key, this.entry});
+  /// Which side a fresh add opens on (v6.0): the Receivables
+  /// page passes true, the Payables page passes false, so each
+  /// page adds its own kind directly.
+  final bool? initialIsLent;
+
+  const UdharScreen({super.key, this.entry, this.initialIsLent});
 
   @override
   State<UdharScreen> createState() => _UdharScreenState();
@@ -42,6 +47,7 @@ class _UdharScreenState extends State<UdharScreen> {
   @override
   void initState() {
     super.initState();
+    _isLent = widget.initialIsLent ?? true;
     final entry = widget.entry;
     if (entry != null) {
       _personController.text = entry.person;
@@ -175,11 +181,25 @@ class _UdharScreenState extends State<UdharScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (!editing && store.hasUdharReminders) ...[
+                  // Loan reminders the user set himself (v7.1):
+                  // due ones in red, upcoming ones below them.
+                  // Nothing here is automatic.
+                  if (!editing &&
+                      (store.customRemindersDue
+                              .any((r) => r['kind'] == 'loan') ||
+                          store.customRemindersUpcoming.isNotEmpty)) ...[
                     Card(
-                      color: store.overdueUdhar.isNotEmpty
-                          ? const Color(0xFFFDECEC)
-                          : const Color(0xFFFFFBEB),
+                      // Theme-aware (v6.0): the light card was
+                      // unreadable in dark mode.
+                      color: store.isDarkMode
+                          ? (store.customRemindersDue
+                                  .any((r) => r['kind'] == 'loan')
+                              ? const Color(0xFF3D2323)
+                              : CashWiseTheme.darkCard)
+                          : (store.customRemindersDue
+                                  .any((r) => r['kind'] == 'loan')
+                              ? const Color(0xFFFDECEC)
+                              : const Color(0xFFFFFBEB)),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(24),
                         onTap: () {
@@ -198,7 +218,9 @@ class _UdharScreenState extends State<UdharScreen> {
                                 Icon(
                                   Icons.notifications_active,
                                   size: 20,
-                                  color: store.overdueUdhar.isNotEmpty
+                                  color: store.customRemindersDue
+                                          .any((r) =>
+                                              r['kind'] == 'loan')
                                       ? CashWiseTheme.danger
                                       : CashWiseTheme.lightAccent,
                                 ),
@@ -213,30 +235,19 @@ class _UdharScreenState extends State<UdharScreen> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            ...store.overdueUdhar.map(
-                              (e) => Text(
-                                strings.dueReminderOverdue(
-                                  store.displayPerson(e.person),
-                                  store.formatAmount(e.remaining),
-                                ),
+                            ...store.customRemindersDue
+                                .where((r) => r['kind'] == 'loan')
+                                .map(
+                              (r) => Text(
+                                store.customReminderText(r),
                                 style: const TextStyle(
                                   color: CashWiseTheme.danger,
                                 ),
                               ),
                             ),
-                            ...store.dueWithinWeekUdhar.map(
-                              (e) => Text(
-                                e.dueStatus == DueStatus.dueToday
-                                    ? strings.dueToday
-                                    : e.dueStatus == DueStatus.dueTomorrow
-                                        ? strings.dueReminderTomorrow(
-                                            store.displayPerson(e.person),
-                                            store.formatAmount(
-                                                e.remaining),
-                                          )
-                                        : '${strings.dueInDays(e.daysUntilDue ?? 0)}: '
-                                            '${store.displayPerson(e.person)} — '
-                                            '${store.formatAmount(e.remaining)}',
+                            ...store.customRemindersUpcoming.map(
+                              (r) => Text(
+                                store.customReminderText(r),
                               ),
                             ),
                           ],
@@ -316,7 +327,6 @@ class _UdharScreenState extends State<UdharScreen> {
                               final picked = await showStyledDatePicker(
                                 context: context,
                                 initialDate: _selectedDate,
-                                firstDate: DateTime.now(),
                               );
                               if (picked != null) {
                                 setState(() => _selectedDate = picked);
@@ -325,8 +335,7 @@ class _UdharScreenState extends State<UdharScreen> {
                             icon: const Icon(Icons.calendar_today),
                             label: Text(
                               '${strings.date}: '
-                              '${_selectedDate.day}/${_selectedDate.month}/'
-                              '${_selectedDate.year}',
+                              '${store.formatDate(_selectedDate)}',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -340,7 +349,6 @@ class _UdharScreenState extends State<UdharScreen> {
                                       context: context,
                                       initialDate:
                                           _dueDate ?? DateTime.now(),
-                                      firstDate: DateTime.now(),
                                     );
                                     if (picked != null) {
                                       setState(
@@ -352,8 +360,7 @@ class _UdharScreenState extends State<UdharScreen> {
                                   label: Text(
                                     _dueDate == null
                                         ? strings.setDueDate
-                                        : '${_dueDate!.day}/${_dueDate!.month}/'
-                                            '${_dueDate!.year}',
+                                        : store.formatDate(_dueDate!),
                                   ),
                                 ),
                               ),

@@ -18,11 +18,17 @@ import 'udhar_screen.dart';
 class LoanLedgerHomeScreen extends StatelessWidget {
   const LoanLedgerHomeScreen({super.key});
 
-  Widget _optionCard({
+  /// A big card for one side of the ledger (v7.1): icon, label,
+  /// the pending amount and how many people owe it — the two
+  /// sides sit side by side, so the ledger opens with its own
+  /// numbers, not a grid of identical buttons.
+  Widget _bigCard({
     required String label,
     required IconData icon,
     required Color tint,
     required Color iconColor,
+    required String amount,
+    required String count,
     required VoidCallback onTap,
   }) {
     return Expanded(
@@ -41,16 +47,80 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                   foregroundColor: iconColor,
                   child: Icon(icon),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  amount,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  count,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: CashWiseTheme.secondaryText,
                   ),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// A full-width action row, matching the Budget screen's rows
+  /// in spirit but used here only for Details and Summary —
+  /// the two sides above already carry the ledger's main actions.
+  Widget _actionRow({
+    required String label,
+    required IconData icon,
+    required Color tint,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: tint,
+                foregroundColor: iconColor,
+                child: Icon(icon),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: CashWiseTheme.secondaryText,
+              ),
+            ],
           ),
         ),
       ),
@@ -141,12 +211,17 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _optionCard(
+                      _bigCard(
                         label: strings.moneyLent,
                         icon: Icons.call_received,
                         tint: const Color(0xFFECFDF5),
                         iconColor: const Color(0xFF047857),
+                        amount: store.formatAmount(
+                            store.totalLentOutstanding),
+                        count:
+                            '${store.udharEntries.where((e) => e.isLent && !e.settled).length} ${strings.people}',
                         onTap: () {
                           Navigator.of(context).push(
                             slideRoute(
@@ -156,11 +231,15 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                         },
                       ),
                       const SizedBox(width: 12),
-                      _optionCard(
+                      _bigCard(
                         label: strings.moneyBorrowed,
                         icon: Icons.call_made,
                         tint: const Color(0xFFFFFBEB),
                         iconColor: const Color(0xFFB45309),
+                        amount: store.formatAmount(
+                            store.totalBorrowedOutstanding),
+                        count:
+                            '${store.udharEntries.where((e) => !e.isLent && !e.settled).length} ${strings.people}',
                         onTap: () {
                           Navigator.of(context).push(
                             slideRoute(
@@ -172,34 +251,29 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _optionCard(
-                        label: strings.details,
-                        icon: Icons.bar_chart,
-                        tint: const Color(0xFFF5F3FF),
-                        iconColor: const Color(0xFF6D28D9),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            slideRoute(const UdharScreen()),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      _optionCard(
-                        label: strings.summary,
-                        icon: Icons.summarize,
-                        tint: const Color(0xFFE0E7FF),
-                        iconColor: const Color(0xFF3730A3),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            slideRoute(
-                              const LoanLedgerSummaryScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                  _actionRow(
+                    label: strings.details,
+                    icon: Icons.bar_chart,
+                    tint: const Color(0xFFF5F3FF),
+                    iconColor: const Color(0xFF6D28D9),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        slideRoute(const UdharScreen()),
+                      );
+                    },
+                  ),
+                  _actionRow(
+                    label: strings.summary,
+                    icon: Icons.summarize,
+                    tint: const Color(0xFFE0E7FF),
+                    iconColor: const Color(0xFF3730A3),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        slideRoute(
+                          const LoanLedgerSummaryScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -198,7 +198,7 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
               nextDue == null
                   ? strings.noDueDate
                   : '${strings.nextDue}: '
-                      '${nextDue.day}/${nextDue.month}/${nextDue.year}',
+                      '${store.formatDate(nextDue)}',
             ];
             return Card(
               margin: const EdgeInsets.only(bottom: 8),

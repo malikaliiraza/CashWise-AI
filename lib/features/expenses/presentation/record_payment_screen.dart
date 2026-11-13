@@ -46,23 +46,6 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
       setState(() => _error = strings.enterTitleValidAmount);
       return;
     }
-    // A payment can never be in the future: not a later date,
-    // and not a later time today.
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final day = DateTime(_date.year, _date.month, _date.day);
-    if (day.isAfter(today)) {
-      setState(() => _date = today);
-    }
-    if (day == today &&
-        _time != null &&
-        (_time!.hour * 60 + _time!.minute) >
-            now.hour * 60 + now.minute) {
-      setState(() => _time = TimeOfDay(
-            hour: now.hour,
-            minute: now.minute,
-          ));
-    }
     final entry = store.udharEntries.firstWhere(
       (e) => e.id == widget.entry.id,
       orElse: () => widget.entry,
@@ -188,8 +171,6 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                             final picked = await showStyledDatePicker(
                               context: context,
                               initialDate: _date,
-                              // A payment can never be dated in the future.
-                              lastDate: DateTime.now(),
                             );
                             if (picked != null) {
                               setState(() => _date = picked);
@@ -198,7 +179,7 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                           icon: const Icon(Icons.calendar_today),
                           label: Text(
                             '${strings.date}: '
-                            '${_date.day}/${_date.month}/${_date.year} '
+                            '${store.formatDate(_date)} '
                             '(${store.weekdayName(_date)})',
                           ),
                         ),
@@ -270,7 +251,7 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                         child: ListTile(
                           title: Text(store.formatAmount(p.amount)),
                           subtitle: Text(
-                            '${p.date.day}/${p.date.month}/${p.date.year}'
+                            '${store.formatDate(p.date)}'
                             ' • ${store.weekdayName(p.date)}'
                             '${time == null ? '' : ' • $time'}',
                           ),
