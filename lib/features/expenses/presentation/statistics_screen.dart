@@ -304,8 +304,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     title: Text(expense.title),
                     subtitle: Text(
                       '${strings.categoryName(expense.category)} • '
-                      '${expense.date.day}/${expense.date.month}/'
-                      '${expense.date.year}',
+                      '${store.formatDate(expense.date)}',
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

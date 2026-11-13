@@ -28,6 +28,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
   ];
 
   final _amountController = TextEditingController();
+  final _nameController = TextEditingController();
   double? _selectedPreset;
   String? _error;
 
@@ -38,16 +39,19 @@ class _BudgetScreenState extends State<BudgetScreen> {
   @override
   void initState() {
     super.initState();
-    final budget = context.read<ExpenseStore>().monthlyBudgetPkr;
+    final store = context.read<ExpenseStore>();
+    final budget = store.monthlyBudgetPkr;
     if (budget > 0) {
       _amountController.text = budget.toStringAsFixed(0);
       if (_presets.contains(budget)) _selectedPreset = budget;
+      _nameController.text = store.activeBudget?.name ?? '';
     }
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -60,9 +64,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
       return;
     }
     if (_addingNew) {
-      await store.addBudget(amount);
+      await store.addBudget(amount, name: _nameController.text);
     } else {
-      await store.setMonthlyBudget(amount);
+      await store.setMonthlyBudget(amount, name: _nameController.text);
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -134,6 +138,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           _addingNew = s.first;
                           if (_addingNew) {
                             _amountController.clear();
+                            _nameController.clear();
                             _selectedPreset = null;
                           } else {
                             final budget = store.monthlyBudgetPkr;
@@ -141,6 +146,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               _amountController.text =
                                   budget.toStringAsFixed(0);
                             }
+                            _nameController.text =
+                                store.activeBudget?.name ?? '';
                           }
                           _error = null;
                         });
@@ -162,7 +169,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         for (var i = 0; i < store.budgets.length; i++)
                           ChoiceChip(
                             label: Text(
-                              '${strings.budget} ${i + 1} — '
+                              '${store.budgetDisplayName(store.budgets[i])} — '
                               '${store.formatAmount(store.budgets[i].amount)}',
                             ),
                             selected: store.budgets[i].id ==
@@ -176,6 +183,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                 _amountController.text = store
                                     .monthlyBudgetPkr
                                     .toStringAsFixed(0);
+                                _nameController.text =
+                                    store.activeBudget?.name ?? '';
                                 _selectedPreset = null;
                               });
                             },
@@ -205,6 +214,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         .toList(),
                   ),
                   const SizedBox(height: 20),
+                  TextField(
+                    controller: _nameController,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      labelText: strings.budgetName,
+                      hintText: strings.budgetNameHint,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,

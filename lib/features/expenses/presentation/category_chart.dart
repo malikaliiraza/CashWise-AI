@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import '../../../core/localization.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
-import '../models/expense.dart';
 
 /// One fixed colour per category (English key). Emerald leads, matching
 /// the Clean Light theme; the other six are distinct so slices and the

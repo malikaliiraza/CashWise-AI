@@ -160,8 +160,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       final picked = await showStyledDatePicker(
                         context: context,
                         initialDate: _selectedDate,
-                        // An expense can never be dated in the future.
-                        lastDate: DateTime.now(),
                       );
                       if (picked != null) {
                         setState(() => _selectedDate = picked);
@@ -170,8 +168,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     icon: const Icon(Icons.calendar_today),
                     label: Text(
                       '${strings.date}: '
-                      '${_selectedDate.day}/${_selectedDate.month}/'
-                      '${_selectedDate.year}',
+                      '${store.formatDate(_selectedDate)}',
                     ),
                   ),
                   const SizedBox(height: 20),

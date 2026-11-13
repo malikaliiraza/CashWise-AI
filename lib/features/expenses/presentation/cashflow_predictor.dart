@@ -164,7 +164,7 @@ class CashFlowPredictorCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${runOut.day}/${runOut.month}/${runOut.year}',
+                      store.formatDate(runOut),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: CashWiseTheme.danger,

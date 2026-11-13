@@ -20,7 +20,6 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
-import '../models/udhar_entry.dart';
 import 'add_expense_screen.dart';
 import 'budget_home_screen.dart';
 import 'budget_screen.dart';
@@ -29,7 +28,6 @@ import 'loan_ledger_home_screen.dart';
 import 'loan_ledger_summary_screen.dart';
 import 'history_screen.dart';
 import 'reminders_screen.dart';
-import 'udhar_detail_sheet.dart';
 import 'statistics_screen.dart';
 import 'theme_slider.dart';
 import 'udhar_list_screen.dart';
@@ -90,8 +88,13 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'v5.7.3',
+                'v7.1',
                 style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                strings.aboutText,
+                style: const TextStyle(fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 12),
               Text(strings.aboutDescription),
@@ -115,6 +118,26 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 6),
               Text(strings.whatsNewText),
+              const SizedBox(height: 16),
+              Text(
+                strings.aboutDeveloperTitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(strings.aboutDeveloper),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                strings.aboutPrivacy,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ],
           ),
         ),
@@ -151,32 +174,112 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// The Home reminders card: SHORT rows only — a few words
-  /// each, at most two reminders plus the budget warning when
-  /// there is one. Full details open on tap; the chevron opens
-  /// the Reminders page for the rest.
+  /// One option button for the two-column grid: a tinted tile
+  /// with the icon above the label.
+  Widget _subButton(
+    ({String label, IconData icon, VoidCallback onTap}) a,
+    Color iconColor,
+  ) {
+    return Material(
+      color: CashWiseTheme.accentSoft,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: a.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(a.icon, size: 18, color: iconColor),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  a.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// One option button for the full-width rows: a tinted row
+  /// with the icon, the label and a chevron.
+  Widget _subButtonRow(
+    ({String label, IconData icon, VoidCallback onTap}) a,
+    Color iconColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: CashWiseTheme.accentSoft,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: a.onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            child: Row(
+              children: [
+                Icon(a.icon, size: 18, color: iconColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    a.label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: CashWiseTheme.secondaryText,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The Home reminders card (v7.1): SHORT rows only — a few
+  /// words each, at most two reminders. Only reminders the user
+  /// set himself ever appear here; nothing is automatic. The
+  /// chevron opens the Reminders page for the rest.
   Widget _remindersCard(ExpenseStore store) {
     final strings = store.strings;
-    final entries = <UdharEntry>[
-      ...store.overdueUdhar,
-      ...store.dueWithinWeekUdhar
-          .where((e) => !store.overdueUdhar.contains(e)),
-    ];
-    final shown = entries.take(2).toList();
-    final hasMore = entries.length > shown.length;
+    // Due reminders only, two rows at most — the rest live
+    // behind "View all".
+    final customDue = store.customRemindersDue;
+    final customShown = customDue.take(2).toList();
+    final hasMore = customDue.length > 2;
 
-    String shortDue(UdharEntry e) {
-      final status = e.dueStatus;
-      if (status == DueStatus.overdue) return strings.overdue;
-      if (status == DueStatus.dueToday) return strings.dueToday;
-      if (status == DueStatus.dueTomorrow) return strings.dueTomorrow;
-      return strings.dueInDays(e.daysUntilDue ?? 0);
-    }
-
+    // Theme-aware card (v6.0): the old light pink/cream card
+    // was unreadable in dark mode (light text on a light card).
+    final isDark = store.isDarkMode;
+    final hasDue = customDue.isNotEmpty;
     return Card(
-      color: store.overdueUdhar.isNotEmpty
-          ? const Color(0xFFFDECEC)
-          : const Color(0xFFFFFBEB),
+      color: isDark
+          ? (hasDue
+              ? const Color(0xFF3D2323)
+              : CashWiseTheme.darkCard)
+          : (hasDue
+              ? const Color(0xFFFDECEC)
+              : const Color(0xFFFFFBEB)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -187,9 +290,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(
                   Icons.notifications_active,
                   size: 20,
-                  color: store.overdueUdhar.isNotEmpty
+                  color: hasDue
                       ? CashWiseTheme.danger
-                      : CashWiseTheme.lightAccent,
+                      : CashWiseTheme.accentFor(context),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -212,30 +315,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            if (store.hasBudgetWarning)
-              _reminderRow(
-                icon: Icons.warning_amber,
-                color: CashWiseTheme.danger,
-                text: store.warningLevel >= 100
-                    ? strings.warning100
-                    : strings.warning80,
+            ...customShown.map(
+              (r) => _reminderRow(
+                icon: Icons.schedule,
+                color: CashWiseTheme.accentFor(context),
+                text: store.customReminderText(r),
                 onTap: () {
                   Navigator.of(context).push(
                     slideRoute(const RemindersScreen()),
                   );
                 },
-              ),
-            ...shown.map(
-              (e) => _reminderRow(
-                icon: e.isOverdue
-                    ? Icons.notifications_active
-                    : Icons.schedule,
-                color: e.isOverdue
-                    ? CashWiseTheme.danger
-                    : CashWiseTheme.lightAccent,
-                text: '${store.displayPerson(e.person)} — '
-                    '${store.formatAmount(e.remaining)} · ${shortDue(e)}',
-                onTap: () => UdharDetailSheet.show(context, e),
               ),
             ),
             if (hasMore)
@@ -294,9 +383,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// One big category card on the home page: icon, name, a short
-  /// preview of that category's own totals, and a chevron. The
-  /// two categories stay separate — each card only ever shows
-  /// its own numbers.
+  /// preview of that category's own totals, a chevron — and below
+  /// it, the category's options as REAL buttons (v7.1): each with
+  /// its own icon and a tinted background, so they look like
+  /// buttons, not plain rows. The two categories do NOT share
+  /// one layout: Budget shows two-column tiles, Loan Ledger
+  /// shows full-width rows — the sequence is different on
+  /// purpose. The two categories stay separate — each card only
+  /// ever shows its own numbers and its own options.
   Widget _categoryCard({
     required String label,
     required IconData icon,
@@ -304,6 +398,9 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color iconColor,
     required String preview,
     required VoidCallback onTap,
+    required List<({String label, IconData icon, VoidCallback onTap})>
+        subActions,
+    required bool subActionsAsGrid,
   }) {
     return Card(
       margin: EdgeInsets.zero,
@@ -323,43 +420,70 @@ class _HomeScreenState extends State<HomeScreen> {
             horizontal: 20,
             vertical: 22,
           ),
-          child: Row(
+          child: Column(
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: tint,
-                foregroundColor: iconColor,
-                child: Icon(icon, size: 30),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: tint,
+                    foregroundColor: iconColor,
+                    child: Icon(icon, size: 30),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          preview,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: CashWiseTheme.secondaryText,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      preview,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: CashWiseTheme.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: CashWiseTheme.secondaryText,
+                  ),
+                ],
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: CashWiseTheme.secondaryText,
-              ),
+              if (subActions.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                if (subActionsAsGrid)
+                  // Two-column tiles: icon above the label.
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 2.9,
+                    children: subActions
+                        .map((a) => _subButton(a, iconColor))
+                        .toList(),
+                  )
+                else
+                  // Full-width rows: icon, label, chevron.
+                  Column(
+                    children: subActions
+                        .map((a) => _subButtonRow(a, iconColor))
+                        .toList(),
+                  ),
+              ],
             ],
           ),
         ),
@@ -708,6 +832,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 2),
                       Text(
                         store.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: store.isDarkMode
                               ? Colors.white
@@ -718,6 +844,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (store.userEmail.isNotEmpty) ...[
                       Text(
                         store.userEmail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: store.isDarkMode
                               ? Colors.white70
@@ -733,9 +861,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(strings.home),
                 onTap: () => Navigator.of(context).pop(),
               ),
-              // Reminders section — overdue + due-soon entries
-              // live in the drawer too; tapping one opens its
-              // detail, "View all reminders" opens the full page.
+              // Reminders section — only reminders the user set
+              // himself live in the drawer too (v7.1); tapping
+              // one opens the full page.
               ExpansionTile(
                 leading: const Icon(Icons.notifications_active),
                 title: Text(strings.reminders),
@@ -760,56 +888,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       )
                     : null,
                 children: [
-                  if (!store.hasUdharReminders)
+                  if (!store.hasCustomRemindersDue)
                     ListTile(
                       title: Text(strings.noReminders),
                       enabled: false,
                     )
                   else ...[
-                    // At most two rows here — the rest live
-                    // behind "View all reminders".
-                    ...[
-                      ...store.overdueUdhar,
-                      ...store.dueWithinWeekUdhar.where(
-                          (e) => !store.overdueUdhar.contains(e)),
-                    ].take(2).map(
-                      (e) => Dismissible(
-                        key: ValueKey(e.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          color: CashWiseTheme.danger,
-                          padding: const EdgeInsets.only(right: 16),
-                          child: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.white,
-                          ),
-                        ),
-                        onDismissed: (_) =>
-                            store.dismissReminder(e),
-                        child: ListTile(
-                          leading: Icon(
-                            e.isOverdue
-                                ? Icons.notifications_active
-                                : Icons.schedule,
-                            size: 18,
-                            color: e.isOverdue
-                                ? CashWiseTheme.danger
-                                : null,
-                          ),
-                          title: Text(store.displayPerson(e.person)),
-                          subtitle: Text(
-                            '${strings.remainingAmount}: '
-                            '${store.formatAmount(e.remaining)}',
-                          ),
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            UdharDetailSheet.show(context, e);
-                          },
-                        ),
+                    ...store.customRemindersDue.take(2).map(
+                      (r) => ListTile(
+                        leading: const Icon(Icons.schedule, size: 18),
+                        title: Text(store.customReminderText(r)),
+                        onTap: () {
+                          store.markRemindersRead();
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            slideRoute(const RemindersScreen()),
+                          );
+                        },
                       ),
                     ),
-                  ],
                   ListTile(
                     leading: const Icon(Icons.list),
                     title: Text(strings.viewAllReminders),
@@ -822,6 +919,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ],
+              ],
               ),
               // Budget section — arrow opens Set budget, Add
               // Expense, Details, AI Predictor and Summary below it.
@@ -988,9 +1086,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (store.hasUdharReminders || store.hasBudgetWarning)
-                      _remindersCard(store),
-                    const SizedBox(height: 16),
                     // Welcome hero — rich gradient + gold rule.
                     Container(
                       // The welcome hero follows the theme too:
@@ -1058,12 +1153,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  Icons.account_balance_wallet,
-                                  size: 44,
-                                  color: store.isDarkMode
-                                      ? Colors.white
-                                      : CashWiseTheme.lightAccent,
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Image.asset(
+                                    'assets/logo.png',
+                                    width: 56,
+                                    height: 56,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                           const SizedBox(height: 12),
                           Text(
@@ -1100,6 +1197,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                    // Reminders sit directly under the Welcome
+                    // note (v6.0) — never above it.
+                    if (store.hasCustomRemindersDue) ...[
+                      const SizedBox(height: 16),
+                      _remindersCard(store),
+                    ],
                     const SizedBox(height: 16),
                     Text(
                       strings.categories,
@@ -1125,6 +1228,35 @@ class _HomeScreenState extends State<HomeScreen> {
                           slideRoute(const BudgetHomeScreen()),
                         );
                       },
+                      // Two-column tiles (v7.1).
+                      subActionsAsGrid: true,
+                      subActions: [
+                        (
+                          label: strings.setMonthlyBudget,
+                          icon: Icons.edit,
+                          onTap: _openBudget,
+                        ),
+                        (
+                          label: strings.addExpense,
+                          icon: Icons.add,
+                          onTap: _openAddExpense,
+                        ),
+                        (
+                          label: strings.details,
+                          icon: Icons.bar_chart,
+                          onTap: () => _openDetails(0),
+                        ),
+                        (
+                          label: strings.aiPredictor,
+                          icon: Icons.psychology,
+                          onTap: () => _openDetails(1),
+                        ),
+                        (
+                          label: strings.summary,
+                          icon: Icons.summarize,
+                          onTap: () => _openDetails(2),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     _categoryCard(
@@ -1142,6 +1274,40 @@ class _HomeScreenState extends State<HomeScreen> {
                           slideRoute(const LoanLedgerHomeScreen()),
                         );
                       },
+                      // Full-width rows (v7.1) — a different
+                      // sequence from the Budget card on purpose.
+                      subActionsAsGrid: false,
+                      subActions: [
+                        (
+                          label: strings.moneyLent,
+                          icon: Icons.arrow_upward,
+                          onTap: () => _openLoanLedgerList(true),
+                        ),
+                        (
+                          label: strings.moneyBorrowed,
+                          icon: Icons.arrow_downward,
+                          onTap: () => _openLoanLedgerList(false),
+                        ),
+                        (
+                          label: strings.details,
+                          icon: Icons.list,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              slideRoute(const UdharScreen()),
+                            );
+                          },
+                        ),
+                        (
+                          label: strings.summary,
+                          icon: Icons.summarize,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              slideRoute(
+                                  const LoanLedgerSummaryScreen()),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     Text(

@@ -14,45 +14,55 @@ import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import 'add_expense_screen.dart';
+import 'budget_detail_screen.dart';
 import 'budget_screen.dart';
 import 'statistics_screen.dart';
 
 class BudgetHomeScreen extends StatelessWidget {
   const BudgetHomeScreen({super.key});
 
-  Widget _optionCard({
+  /// One full-width action row (v7.1): a tinted icon, a bold
+  /// label and a chevron — every option on its own line, so
+  /// nothing is cramped and the order reads top to bottom.
+  Widget _actionRow({
     required String label,
     required IconData icon,
     required Color tint,
     required Color iconColor,
     required VoidCallback onTap,
   }) {
-    return Expanded(
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  backgroundColor: tint,
-                  foregroundColor: iconColor,
-                  child: Icon(icon),
-                ),
-                const SizedBox(height: 10),
-                Text(
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: tint,
+                foregroundColor: iconColor,
+                child: Icon(icon),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: CashWiseTheme.secondaryText,
+              ),
+            ],
           ),
         ),
       ),
@@ -106,7 +116,10 @@ class BudgetHomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Budget switcher: tap a chip to open that
-                  // budget's book; the pencil edits it.
+                  // budget's OWN screen — its categories and
+                  // details — instead of just swapping the amount
+                  // in the summary below (v7.0). The pencil edits
+                  // the active budget's amount.
                   if (store.budgets.isNotEmpty) ...[
                     Row(
                       children: [
@@ -122,12 +135,20 @@ class BudgetHomeScreen extends StatelessWidget {
                                     padding: const EdgeInsets.only(right: 8),
                                     child: ChoiceChip(
                                       label: Text(
-                                        '${strings.budget} ${i + 1}',
+                                        store.budgetDisplayName(
+                                            store.budgets[i]),
                                       ),
                                       selected: store.budgets[i].id ==
                                           store.activeBudgetId,
-                                      onSelected: (_) => store.switchBudget(
-                                          store.budgets[i].id),
+                                      onSelected: (_) {
+                                        Navigator.of(context).push(
+                                          slideRoute(
+                                            BudgetDetailScreen(
+                                              budget: store.budgets[i],
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                               ],
@@ -227,66 +248,48 @@ class BudgetHomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _optionCard(
-                        label: strings.setMonthlyBudget,
-                        icon: Icons.edit,
-                        tint: const Color(0xFFFEF3C7),
-                        iconColor: const Color(0xFF92400E),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            slideRoute(const BudgetScreen()),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      _optionCard(
-                        label: strings.addExpense,
-                        icon: Icons.add,
-                        tint: const Color(0xFFECFDF5),
-                        iconColor: const Color(0xFF047857),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            slideRoute(const AddExpenseScreen()),
-                          );
-                        },
-                      ),
-                    ],
+                  _actionRow(
+                    label: strings.setMonthlyBudget,
+                    icon: Icons.edit,
+                    tint: const Color(0xFFFEF3C7),
+                    iconColor: const Color(0xFF92400E),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        slideRoute(const BudgetScreen()),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _optionCard(
-                        label: strings.details,
-                        icon: Icons.bar_chart,
-                        tint: const Color(0xFFF5F3FF),
-                        iconColor: const Color(0xFF6D28D9),
-                        onTap: () => openDetails(0),
-                      ),
-                      const SizedBox(width: 12),
-                      _optionCard(
-                        label: strings.aiPredictor,
-                        icon: Icons.psychology,
-                        tint: const Color(0xFFFEF3C7),
-                        iconColor: const Color(0xFFB45309),
-                        onTap: () => openDetails(1),
-                      ),
-                    ],
+                  _actionRow(
+                    label: strings.addExpense,
+                    icon: Icons.add,
+                    tint: const Color(0xFFECFDF5),
+                    iconColor: const Color(0xFF047857),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        slideRoute(const AddExpenseScreen()),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _optionCard(
-                        label: strings.summary,
-                        icon: Icons.summarize,
-                        tint: const Color(0xFFE0E7FF),
-                        iconColor: const Color(0xFF3730A3),
-                        onTap: () => openDetails(2),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(child: SizedBox.shrink()),
-                    ],
+                  _actionRow(
+                    label: strings.details,
+                    icon: Icons.bar_chart,
+                    tint: const Color(0xFFF5F3FF),
+                    iconColor: const Color(0xFF6D28D9),
+                    onTap: () => openDetails(0),
+                  ),
+                  _actionRow(
+                    label: strings.aiPredictor,
+                    icon: Icons.psychology,
+                    tint: const Color(0xFFFEF3C7),
+                    iconColor: const Color(0xFFB45309),
+                    onTap: () => openDetails(1),
+                  ),
+                  _actionRow(
+                    label: strings.summary,
+                    icon: Icons.summarize,
+                    tint: const Color(0xFFE0E7FF),
+                    iconColor: const Color(0xFF3730A3),
+                    onTap: () => openDetails(2),
                   ),
                 ],
               ),

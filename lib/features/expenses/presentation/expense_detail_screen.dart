@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/delete_icon_button.dart';
 import '../../../core/gradient_button.dart';
 import '../../../core/styled_date_picker.dart';
 import '../../../core/theme.dart';
@@ -163,7 +164,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                         const SizedBox(height: 8),
                         Text(
                           '${strings.categoryName(expense.category)} • '
-                          '${date.day}/${date.month}/${date.year}',
+                          '${store.formatDate(date)}',
                           style: const TextStyle(
                             color: CashWiseTheme.secondaryText,
                           ),
@@ -246,8 +247,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                             icon: const Icon(Icons.calendar_today),
                             label: Text(
                               '${strings.date}: '
-                              '${_selectedDate.day}/${_selectedDate.month}/'
-                              '${_selectedDate.year}',
+                              '${store.formatDate(_selectedDate)}',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -271,11 +271,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: CashWiseTheme.danger,
-                        ),
+                      DeleteIconButton(
                         tooltip: strings.delete,
                         onPressed: _confirmDelete,
                       ),
