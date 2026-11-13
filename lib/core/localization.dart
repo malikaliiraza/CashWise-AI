@@ -88,6 +88,13 @@ class AppLocale {
   String get logout => _get('logout');
   String get passwordRequirements => _get('passwordRequirements');
   String get invalidEmail => _get('invalidEmail');
+
+  /// "The provider 'l.com' is not a recognised provider."
+  String unknownProvider(String domain) =>
+      _get('unknownProvider').replaceFirst('{d}', domain);
+
+  String get addReceivable => _get('addReceivable');
+  String get addPayable => _get('addPayable');
   String get passwordTooShort => _get('passwordTooShort');
   String get passwordNeedsUppercase => _get('passwordNeedsUppercase');
   String get passwordNeedsNumber => _get('passwordNeedsNumber');
@@ -170,6 +177,9 @@ class AppLocale {
   String get features => _get('features');
   String get aboutDescription => _get('aboutDescription');
   String get aboutFeatures => _get('aboutFeatures');
+  String get aboutPrivacy => _get('aboutPrivacy');
+  String get aboutDeveloper => _get('aboutDeveloper');
+  String get aboutDeveloperTitle => _get('aboutDeveloperTitle');
   String get whatsNew => _get('whatsNew');
   String get whatsNewText => _get('whatsNewText');
   String get paymentTime => _get('paymentTime');
@@ -177,6 +187,34 @@ class AppLocale {
   String get editBudget => _get('editBudget');
   String get addAnotherBudget => _get('addAnotherBudget');
   String get yourBudgets => _get('yourBudgets');
+  String get active => _get('active');
+  String get people => _get('people');
+  String budgetNowActive(String name) =>
+      _get('budgetNowActive').replaceAll('{name}', name);
+  String get enterPersonName => _get('enterPersonName');
+  String get reminderAdded => _get('reminderAdded');
+  String get saveReminder => _get('saveReminder');
+  String get reminderMustBeFuture => _get('reminderMustBeFuture');
+  String get setReminder => _get('setReminder');
+  String get upcomingReminders => _get('upcomingReminders');
+  String get dueReminders => _get('dueReminders');
+  String get budgetName => _get('budgetName');
+  String get budgetNameHint => _get('budgetNameHint');
+  String get renameBudget => _get('renameBudget');
+  String get useThisBudget => _get('useThisBudget');
+  String get addReminder => _get('addReminder');
+  String get customReminders => _get('customReminders');
+  String get budgetReminder => _get('budgetReminder');
+  String get loanReminder => _get('loanReminder');
+  String get remindWhenRemaining => _get('remindWhenRemaining');
+  String get dueMustBeFuture => _get('dueMustBeFuture');
+  String get bin => _get('bin');
+  String daysLeftInBin(int n) =>
+      _get('daysLeftInBin').replaceAll('{n}', '$n');
+  String get binAutoRemove => _get('binAutoRemove');
+  String get paymentDetails => _get('paymentDetails');
+  String get remainingAfterPayment => _get('remainingAfterPayment');
+  String get thisPayment => _get('thisPayment');
   String get budgetHistory => _get('budgetHistory');
   String get loanHistory => _get('loanHistory');
   String get deletedItems => _get('deletedItems');
@@ -249,7 +287,7 @@ const List<AppLocale> appLocales = [
       'home': 'Home',
       'darkMode': 'Dark mode',
       'about': 'About',
-      'aboutText': 'Offline-first expense tracker in English and Urdu, with charts and a cash-flow predictor.',
+      'aboutText': 'Your money, beautifully organized \u2014 budgets, expenses, loans and reminders, all in one place, fully offline.',
       'sortBy': 'Sort by',
       'newestFirst': 'Newest first',
       'oldestFirst': 'Oldest first',
@@ -272,6 +310,10 @@ const List<AppLocale> appLocales = [
       'logout': 'Log out',
       'passwordRequirements': 'Password must be 8+ characters with 1 uppercase letter, 1 number and 1 special character.',
       'invalidEmail': 'Invalid email address.',
+      'unknownProvider':
+          "The provider '{d}' is not a recognised provider.",
+      'addReceivable': 'Add receivable',
+      'addPayable': 'Add payable',
       'passwordTooShort': 'Password must be at least 8 characters.',
       'passwordNeedsUppercase': 'Password must contain 1 uppercase letter.',
       'passwordNeedsNumber': 'Password must contain 1 number.',
@@ -353,17 +395,50 @@ const List<AppLocale> appLocales = [
       'nameInUrdu': 'Name in Urdu',
       'features': 'Features',
       'aboutDescription':
-          'CashWise AI is your personal finance companion. Track your monthly budget and every expense, manage money lent and borrowed in the Loan Ledger with due dates, times and partial payments, get reminders before payments are due, and see an AI prediction of when your budget will run out — all offline, in English or Urdu.',
+          'CashWise AI is a personal finance companion built for everyday money in Pakistan. Set monthly budgets \u2014 one or several \u2014 track every expense by category, lend and borrow with due dates, times and partial payments in the Loan Ledger, and set your own reminders for any payment — the app only ever reminds you when you asked it to. A local cash-flow predictor shows when your budget will run out, before it happens. Everything works offline, in English or Urdu, with your data staying on your device.',
       'aboutFeatures':
-          '• Monthly budget with 80% and 100% alerts\n• Expenses with categories, search and a pie chart\n• Loan Ledger — Receivables and Payables, due dates and times, partial payments\n• Reminders for overdue and upcoming payments\n• AI cash-flow predictor\n• English and Urdu, dark and light themes\n• Works fully offline',
-      'whatsNew': "What's new in v5.8",
+          '\u2022 Monthly budgets \u2014 named by you, each with its own screen, expenses and alerts\n\u2022 Expenses \u2014 categories, search, filters and a pie chart of where the money goes\n\u2022 Loan Ledger \u2014 Receivables and Payables, due dates and times, partial payments, full history\n\u2022 Reminders \u2014 only the ones you set yourself, for any payment or budget, always in the future — plus a Bin that keeps deleted items for 30 days\n\u2022 AI cash-flow predictor \u2014 daily average, projected month-end spend and run-out date\n\u2022 English and Urdu \u2014 full translation, Urdu script throughout, right-to-left layout\n\u2022 Light and dark themes, and a wallet welcome every time the app opens\n\u2022 Works fully offline \u2014 no account, no server, no internet needed',
+      'aboutDeveloperTitle': 'About the developer',
+      'aboutDeveloper':
+          'CashWise AI is built by Malik Ali Raza — a Flutter & Web Developer and Software Engineering student at Riphah International University, Sahiwal. He builds real apps people actually use, with clean architecture, and is open to internships and freelance work.',
+      'aboutPrivacy':
+          'Privacy: your budgets, expenses and loans are stored only on this device. CashWise AI never uploads your financial data anywhere.',
+      'whatsNew': "What's new in v7.1",
       'whatsNewText':
-          '• Amounts always show Rs. / روپے\n• Unread reminder badge on the menu, cleared when read\n• Record Payment screen — partial payments with date, time and day\n• Cleaner, professional time picker\n• Delete is an icon everywhere, never written out',
+          '• The earlier wallet is back on the welcome page: its lid flips open and a gold card slides out\n• The home cards are clean again — every option lives inside its own category screen, each laid out differently\n• Calendars are fully open: every date is pickable, none is hidden or greyed out\n• Reminders only ever come when you set them — set one on any loan entry or payment, always in the future\n• The Reminders page shows only your reminders: Due now and Upcoming\n• About now says who built CashWise AI',
       'paymentTime': 'Payment time',
       'history': 'History',
       'editBudget': 'Edit budget',
       'addAnotherBudget': 'Add another budget',
       'yourBudgets': 'Your budgets',
+      'active': 'Active',
+      'people': 'people',
+      'budgetNowActive': '{name} is now the active budget.',
+      'enterPersonName': "Enter the person's name.",
+      'reminderAdded': 'Reminder added.',
+      'saveReminder': 'Save reminder',
+      'reminderMustBeFuture':
+          'The reminder must be in the future — not in the past or right now.',
+      'setReminder': 'Set reminder',
+      'upcomingReminders': 'Upcoming',
+      'dueReminders': 'Due now',
+      'budgetName': 'Budget name',
+      'budgetNameHint': 'e.g. Home, Ramzan, Business',
+      'renameBudget': 'Rename budget',
+      'useThisBudget': 'Use this budget',
+      'addReminder': 'Add reminder',
+      'customReminders': 'Your reminders',
+      'budgetReminder': 'Budget reminder',
+      'loanReminder': 'Loan reminder',
+      'remindWhenRemaining': 'Remind me when the remaining amount falls to',
+      'dueMustBeFuture': 'The due date and time must be in the future.',
+      'bin': 'Bin',
+      'daysLeftInBin': '{n} days left in bin',
+      'binAutoRemove':
+          'Deleted items stay in the Bin for 30 days, then are removed automatically.',
+      'paymentDetails': 'Payment details',
+      'remainingAfterPayment': 'Remaining after this payment',
+      'thisPayment': 'This payment',
       'budgetHistory': 'Budget history',
       'loanHistory': 'Loan history',
       'deletedItems': 'Deleted items',
@@ -435,7 +510,7 @@ const List<AppLocale> appLocales = [
       'home': 'ہوم',
       'darkMode': 'ڈارک موڈ',
       'about': 'تعارف',
-      'aboutText': 'آف لائن خرچ ٹریکر — انگریزی اور اردو، چارٹس اور کیش فلو پیش گوئی کے ساتھ۔',
+      'aboutText': 'آپ کا پیسہ، خوبصورتی سے منظم — بجٹ، خرچے، قرض اور یاد دہانیاں، سب ایک جگہ، مکمل طور پر آف لائن۔',
       'sortBy': 'ترتیب',
       'newestFirst': 'نئے پہلے',
       'oldestFirst': 'پرانے پہلے',
@@ -458,6 +533,9 @@ const List<AppLocale> appLocales = [
       'logout': 'لاگ آؤٹ',
       'passwordRequirements': 'پاس ورڈ کم از کم 8 حروف کا ہو، جس میں 1 بڑا حرف، 1 عدد اور 1 خاص علامت ہو۔',
       'invalidEmail': 'غلط ای میل۔',
+      'unknownProvider': "فراہم کنندہ '{d}' تسلیم شدہ نہیں ہے۔",
+      'addReceivable': 'وصولی شامل کریں',
+      'addPayable': 'ادائیگی شامل کریں',
       'passwordTooShort': 'پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے۔',
       'passwordNeedsUppercase': 'پاس ورڈ میں 1 بڑا حرف ہونا چاہیے۔',
       'passwordNeedsNumber': 'پاس ورڈ میں 1 عدد ہونا چاہیے۔',
@@ -539,17 +617,50 @@ const List<AppLocale> appLocales = [
       'nameInUrdu': 'اردو میں نام',
       'features': 'خصوصیات',
       'aboutDescription':
-          'کیش وائز اے آئی آپ کا ذاتی مالی ساتھی ہے۔ اپنا ماہانہ بجٹ اور ہر خرچ ٹریک کریں، ادھار کھاتے میں دیے اور لیے گئے پیسوں کو مقررہ تاریخ، وقت اور جزوی ادائیگیوں کے ساتھ سنبھالیں، واجب الادا ادائیگیوں سے پہلے یاد دہانیاں پائیں، اور اے آئی پیش گوئی سے دیکھیں کہ بجٹ کب ختم ہوگا — سب کچھ آف لائن، انگریزی یا اردو میں۔',
+          'کیش وائز اے آئی پاکستان میں روزمرہ کے پیسوں کے لیے بنایا گیا ذاتی مالی ساتھی ہے۔ ایک یا کئی ماہانہ بجٹ بنائیں، ہر خرچ کو زمرے کے حساب سے ٹریک کریں، ادھار کھاتے میں مقررہ تاریخ، وقت اور جزوی ادائیگیوں کے ساتھ پیسے دیں اور لیں، اور کسی بھی ادائیگی کے لیے اپنی یاد دہانی لگائیں — ایپ صرف تب یاد دلائے گی جب آپ نے کہا ہو۔ مقامی کیش فلو پیش گوئی بتاتی ہے کہ بجٹ کب ختم ہوگا — ختم ہونے سے پہلے۔ سب کچھ آف لائن کام کرتا ہے، انگریزی یا اردو میں، اور آپ کا ڈیٹا آپ کے آلے پر ہی رہتا ہے۔',
       'aboutFeatures':
-          '• ماہانہ بجٹ، 80٪ اور 100٪ الرٹس کے ساتھ\n• زمروں، تلاش اور پائی چارٹ کے ساتھ خرچے\n• ادھار کھاتہ — وصولیاں اور ادائیگیاں، مقررہ تاریخ و وقت، جزوی ادائیگیاں\n• واجب الادا اور آنے والی ادائیگیوں کی یاد دہانیاں\n• اے آئی کیش فلو پیش گوئی\n• انگریزی اور اردو، ہلکا اور گہرا تھیم\n• مکمل طور پر آف لائن کام کرتا ہے',
-      'whatsNew': 'v5.8 میں نیا کیا ہے',
+          '• ماہانہ بجٹ — اپنے نام والے کئی بجٹ، ہر ایک کی اپنی اسکرین، خرچے اور الرٹس\n• خرچے — زمرے، تلاش، فلٹر اور پائی چارٹ جس سے پتا چلے پیسہ کہاں گیا\n• ادھار کھاتہ — وصولیاں اور ادائیگیاں، مقررہ تاریخ و وقت، جزوی ادائیگیاں، مکمل تاریخ\n• یاد دہانیاں — صرف آپ کی لگائی ہوئی یاد دہانیاں، کسی بھی ادائیگی یا بجٹ کے لیے، ہمیشہ مستقبل میں — اور بن جو حذف شدہ اشیاء 30 دن رکھتا ہے\n• اے آئی کیش فلو پیش گوئی — روزانہ اوسط، مہینے کے آخر کا تخمینہ اور بجٹ ختم ہونے کی تاریخ\n• انگریزی اور اردو — مکمل ترجمہ، ہر جگہ اردو رسم الخط، دائیں سے بائیں ترتیب\n• ہلکا اور گہرا تھیم، اور ہر بار ایپ کھلنے پر والٹ خوش آمدید\n• مکمل طور پر آف لائن — نہ اکاؤنٹ، نہ سرور، نہ انٹرنیٹ کی ضرورت',
+      'aboutDeveloperTitle': 'ڈویلپر کے بارے میں',
+      'aboutDeveloper':
+          'CashWise AI ملک علی رضا نے بنائی ہے — ایک Flutter اور Web Developer اور Riphah International University, Sahiwal میں Software Engineering کے طالب علم۔ وہ صاف architecture کے ساتھ حقیقی ایپس بناتے ہیں جو لوگ واقعی استعمال کرتے ہیں، اور انٹرنشپ اور فری لانس کام کے لیے دستیاب ہیں۔',
+      'aboutPrivacy':
+          'رازداری: آپ کے بجٹ، خرچے اور قرض صرف اس آلے پر محفوظ ہوتے ہیں۔ کیش وائز اے آئی آپ کا مالی ڈیٹا کہیں بھی نہیں بھیجتا۔',
+      'whatsNew': 'v7.1 میں نیا کیا ہے',
       'whatsNewText':
-          '• رقم کے ساتھ ہمیشہ Rs. / روپے\n• مینیو پر نہ پڑھی گئی یاد دہانیوں کا بیج، پڑھنے پر ختم\n• ادائیگی درج کرنے کی نئی اسکرین — جزوی ادائیگی، تاریخ، وقت اور دن کے ساتھ\n• صاف اور پیشہ ورانہ ٹائم پکر\n• ڈیلیٹ ہر جگہ آئیکن ہے، لکھا ہوا نہیں',
+          '• خوش آمدید صفحے پر پہلے والا والٹ واپس: ڈھکن کھلتا ہے اور سونے کا کارڈ باہر آتا ہے\n• ہوم کارڈز پھر صاف — ہر اختیار اپنی کیٹیگری کی اسکرین کے اندر ہے، ہر ایک کی ترتیب الگ\n• کیلنڈر مکمل کھلے: ہر تاریخ منتخب ہو سکتی ہے، کوئی چھپی یا بند نہیں\n• یاد دہانی صرف تب آئے گی جب آپ خود لگائیں گے — کسی بھی ادھار یا ادائیگی پر، ہمیشہ مستقبل میں\n• یاد دہانیوں کا صفحہ صرف آپ کی یاد دہانیاں دکھاتا ہے: اب واجب اور آنے والی\n• About میں اب یہ بھی لکھا ہے کہ CashWise AI کس نے بنائی',
       'paymentTime': 'ادائیگی کا وقت',
       'history': 'تاریخ',
       'editBudget': 'بجٹ بدلیں',
       'addAnotherBudget': 'ایک اور بجٹ شامل کریں',
       'yourBudgets': 'آپ کے بجٹ',
+      'active': 'فعال',
+      'people': 'افراد',
+      'budgetNowActive': '{name} اب فعال بجٹ ہے۔',
+      'enterPersonName': 'شخص کا نام درج کریں۔',
+      'reminderAdded': 'یاد دہانی شامل کر دی گئی۔',
+      'saveReminder': 'یاد دہانی محفوظ کریں',
+      'reminderMustBeFuture':
+          'یاد دہانی مستقبل میں ہونی چاہیے — ماضی یا ابھی نہیں۔',
+      'setReminder': 'یاد دہانی لگائیں',
+      'upcomingReminders': 'آنے والی',
+      'dueReminders': 'اب واجب',
+      'budgetName': 'بجٹ کا نام',
+      'budgetNameHint': 'مثلاً گھر، رمضان، کاروبار',
+      'renameBudget': 'بجٹ کا نام بدلیں',
+      'useThisBudget': 'یہ بجٹ استعمال کریں',
+      'addReminder': 'یاد دہانی شامل کریں',
+      'customReminders': 'آپ کی یاد دہانیاں',
+      'budgetReminder': 'بجٹ یاد دہانی',
+      'loanReminder': 'ادھار یاد دہانی',
+      'remindWhenRemaining': 'جب باقی رقم اس حد تک آ جائے تو یاد دلائیں',
+      'dueMustBeFuture': 'واجب الادا تاریخ اور وقت مستقبل میں ہونے چاہئیں۔',
+      'bin': 'بن',
+      'daysLeftInBin': 'بن میں {n} دن باقی',
+      'binAutoRemove':
+          'حذف شدہ اشیاء بن میں 30 دن رہتی ہیں، پھر خود بخود ہٹ جاتی ہیں۔',
+      'paymentDetails': 'ادائیگی کی تفصیلات',
+      'remainingAfterPayment': 'اس ادائیگی کے بعد باقی رقم',
+      'thisPayment': 'یہ ادائیگی',
       'budgetHistory': 'بجٹ کی تاریخ',
       'loanHistory': 'ادھار کی تاریخ',
       'deletedItems': 'حذف شدہ اشیاء',

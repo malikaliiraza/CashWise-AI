@@ -45,10 +45,16 @@ class GradientButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(
+              vertical: 14,
+              horizontal: 12,
+            ),
             child: Center(
               child: Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -93,6 +99,8 @@ class GlowOutlineButton extends StatelessWidget {
         ),
         child: Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
         ),
       ),

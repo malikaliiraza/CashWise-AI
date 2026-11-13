@@ -9,19 +9,17 @@
 // dark mode), professional Inter type. Used everywhere the
 // user picks a date: Add Expense, expense edit, Udhar.
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'theme.dart';
 
-/// The range limits (v5.9): pass [firstDate] to forbid picking
-/// a day before it (loan entry dates can never be in the past)
-/// and [lastDate] to forbid picking after it (an expense can
-/// never be dated in the future). Days outside the range are
-/// greyed out and not tappable; the dialog itself is modal, so
-/// scrolling or tapping on it never scrolls the page behind.
+/// The range limits are optional (v7.1): by default the
+/// calendar is fully open — every date is pickable, none is
+/// greyed out. Pass [firstDate]/[lastDate] only for a picker
+/// that must be bounded (a reminder, which is always in the
+/// future). The dialog itself is modal, so scrolling or
+/// tapping on it never scrolls the page behind.
 Future<DateTime?> showStyledDatePicker({
   required BuildContext context,
   required DateTime initialDate,
@@ -227,8 +225,18 @@ class _FixedCalendarDialogState extends State<_FixedCalendarDialog> {
                     final isToday = day == todayDay;
                     final enabled = _inRange(day);
                     return InkWell(
+                      // Tapping a day of the next/previous month
+                      // opens that month with the day selected
+                      // (v6.0) — it no longer just selects it
+                      // while staying on the old month.
                       onTap: enabled
-                          ? () => setState(() => _selected = day)
+                          ? () => setState(() {
+                                _selected = day;
+                                if (day.month != _month.month) {
+                                  _month =
+                                      DateTime(day.year, day.month);
+                                }
+                              })
                           : null,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
@@ -241,7 +249,7 @@ class _FixedCalendarDialogState extends State<_FixedCalendarDialog> {
                         ),
                         child: Center(
                           child: Text(
-                            '${day.day}',
+                            _digits('${day.day}', isUrdu),
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: isSelected
@@ -299,17 +307,11 @@ class _FixedCalendarDialogState extends State<_FixedCalendarDialog> {
   }
 }
 
-/// A stylish fixed-size time picker, matching the calendar:
-/// hour + minute wheels, an AM/PM switch, gold accents, fixed
-/// size (340 x 400) so it never resizes. In Urdu mode the digits
-/// and AM/PM labels are Urdu too. Used for due times.
-/// A clean, professional time picker (v5.8 rework).
-///
-/// The old wheel version showed far too many numbers at once.
-/// This one shows only the selected time, big and clear, with
-/// two stepper columns (hour / minute: tap a chevron to step by
-/// one, hold it to run through fast) and an AM/PM switch. Fixed
-/// size (340 x 400). In Urdu mode the digits and AM/PM labels
+/// A stylish fixed-size time picker, matching the calendar
+/// (v6.0): hour + minute SCROLL WHEELS — flick or drag to spin
+/// through the values, the selected one big and clear on a gold
+/// band — an AM/PM switch, gold accents, fixed size (340 x 400)
+/// so it never resizes. In Urdu mode the digits and AM/PM labels
 /// are Urdu too. Used for due times and payment times.
 Future<TimeOfDay?> showStyledTimePicker({
   required BuildContext context,
@@ -334,7 +336,8 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
   late int _hour12;
   late int _minute;
   late bool _isPm;
-  Timer? _repeatTimer;
+  late final FixedExtentScrollController _hourController;
+  late final FixedExtentScrollController _minuteController;
 
   static const _urduDigits = {
     '0': '۰',
@@ -360,83 +363,59 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
     _isPm = h >= 12;
     _hour12 = h % 12 == 0 ? 12 : h % 12;
     _minute = widget.initialTime.minute;
+    _hourController =
+        FixedExtentScrollController(initialItem: _hour12 - 1);
+    _minuteController = FixedExtentScrollController(initialItem: _minute);
   }
 
   @override
   void dispose() {
-    _repeatTimer?.cancel();
+    _hourController.dispose();
+    _minuteController.dispose();
     super.dispose();
   }
 
-  void _stepHour(int delta) {
-    setState(() {
-      _hour12 = ((_hour12 - 1 + delta) % 12 + 12) % 12 + 1;
-    });
-  }
-
-  void _stepMinute(int delta) {
-    setState(() {
-      _minute = (_minute + delta) % 60;
-      if (_minute < 0) _minute += 60;
-    });
-  }
-
-  void _startRepeat(void Function() step) {
-    step();
-    _repeatTimer?.cancel();
-    _repeatTimer = Timer.periodic(
-      const Duration(milliseconds: 110),
-      (_) => step(),
-    );
-  }
-
-  void _stopRepeat() {
-    _repeatTimer?.cancel();
-    _repeatTimer = null;
-  }
-
-  /// One stepper column: chevron up, the big value, chevron
-  /// down. Tap steps once, hold runs through fast.
-  Widget _stepper({
-    required String value,
-    required VoidCallback onUp,
-    required VoidCallback onDown,
+  /// One scroll wheel (v6.0): flick or drag to spin through the
+  /// values; the selected one sits on the gold band in the
+  /// middle, big and clear.
+  Widget _wheel({
+    required FixedExtentScrollController controller,
+    required int itemCount,
+    required int selected,
+    required ValueChanged<int> onSelected,
     required Color accent,
     required bool urdu,
   }) {
-    Widget chevron(IconData icon, VoidCallback step) {
-      return GestureDetector(
-        onTap: step,
-        onLongPressStart: (_) => _startRepeat(step),
-        onLongPressEnd: (_) => _stopRepeat(),
-        onLongPressCancel: _stopRepeat,
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: accent.withValues(alpha: 0.12),
-          ),
-          child: Icon(icon, color: accent, size: 26),
+    return SizedBox(
+      width: 84,
+      height: 180,
+      child: ListWheelScrollView.useDelegate(
+        controller: controller,
+        itemExtent: 48,
+        perspective: 0.003,
+        diameterRatio: 1.6,
+        physics: const FixedExtentScrollPhysics(),
+        onSelectedItemChanged: onSelected,
+        childDelegate: ListWheelChildBuilderDelegate(
+          childCount: itemCount,
+          builder: (context, index) {
+            final isSelected = index == selected;
+            return Center(
+              child: Text(
+                _digits(index.toString().padLeft(2, '0'), urdu),
+                style: GoogleFonts.inter(
+                  fontSize: isSelected ? 34 : 24,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? accent
+                      : CashWiseTheme.secondaryText,
+                ),
+              ),
+            );
+          },
         ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        chevron(Icons.keyboard_arrow_up, onUp),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 44,
-            fontWeight: FontWeight.bold,
-            color: accent,
-          ),
-        ),
-        const SizedBox(height: 4),
-        chevron(Icons.keyboard_arrow_down, onDown),
-      ],
+      ),
     );
   }
 
@@ -492,45 +471,58 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
                     setState(() => _isPm = s.first),
               ),
               const SizedBox(height: 16),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              // Scroll wheels with a gold band on the selected row.
+              SizedBox(
+                height: 180,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    _stepper(
-                      value: _digits(
-                        _hour12.toString().padLeft(2, '0'),
-                        isUrdu,
-                      ),
-                      onUp: () => _stepHour(1),
-                      onDown: () => _stepHour(-1),
-                      accent: accent,
-                      urdu: isUrdu,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        ':',
-                        style: GoogleFonts.inter(
-                          fontSize: 44,
-                          fontWeight: FontWeight.bold,
-                          color: accent,
+                    Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.08),
+                        border: Border.symmetric(
+                          horizontal: BorderSide(
+                            color: accent.withValues(alpha: 0.35),
+                          ),
                         ),
                       ),
                     ),
-                    _stepper(
-                      value: _digits(
-                        _minute.toString().padLeft(2, '0'),
-                        isUrdu,
-                      ),
-                      onUp: () => _stepMinute(1),
-                      onDown: () => _stepMinute(-1),
-                      accent: accent,
-                      urdu: isUrdu,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _wheel(
+                          controller: _hourController,
+                          itemCount: 12,
+                          selected: _hour12 - 1,
+                          onSelected: (i) =>
+                              setState(() => _hour12 = i + 1),
+                          accent: accent,
+                          urdu: isUrdu,
+                        ),
+                        Text(
+                          ':',
+                          style: GoogleFonts.inter(
+                            fontSize: 34,
+                            fontWeight: FontWeight.bold,
+                            color: accent,
+                          ),
+                        ),
+                        _wheel(
+                          controller: _minuteController,
+                          itemCount: 60,
+                          selected: _minute,
+                          onSelected: (i) =>
+                              setState(() => _minute = i),
+                          accent: accent,
+                          urdu: isUrdu,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

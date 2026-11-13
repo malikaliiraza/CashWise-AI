@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// CashWise AI v4.6 — Rich Royal Blue theme (user's choice, 10 Nov
-/// 2026): deep royal blue + white + a thin gold rule, with a subtle
-/// gradient header and soft glow on cards. The v4.5 flat look was
-/// too faded, so the richness is back — but the soft dark mode stays.
-// v5.0 style refresh: the colours stay exactly as the user chose
-// (royal blue + gold) — only the shapes change: rounder cards with
-// a thin outline, rounder buttons, softer shadows. A new style,
-// the same theme.
+/// CashWise AI theme (v6.0): warm ivory + gold + brass, the
+/// same family as the live web version — the old royal-blue
+/// page background and blue card glow are gone, so the mobile
+/// theme no longer looks different from the live one. Dark mode
+/// stays warm charcoal + gold.
 class CashWiseTheme {
   static const Color primary = Color(0xFF1E40AF); // rich royal blue
   static const Color accent = Color(0xFF2563EB); // blue 600
@@ -55,7 +52,7 @@ class CashWiseTheme {
       Theme.of(context).brightness == Brightness.dark
           ? headerGradient
           : lightHeaderGradient;
-  static const Color surface = Color(0xFFF3F6FB); // light blue-grey page
+  static const Color surface = Color(0xFFFFFBEB); // warm ivory page
   static const Color darkText = Color(0xFF0F1E3D); // near-black blue
   static const Color secondaryText = Color(0xFF64748B); // slate 500
   static const Color danger = Color(0xFFDC2626);
@@ -125,7 +122,7 @@ class CashWiseTheme {
       color: Colors.white,
       surfaceTintColor: Colors.white,
       elevation: 1,
-      shadowColor: const Color(0x141E40AF), // soft blue glow
+      shadowColor: const Color(0x14000000), // soft neutral shadow
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(color: Colors.grey.shade200),
