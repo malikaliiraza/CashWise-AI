@@ -1,11 +1,12 @@
-// CashWise AI — animated welcome screen (v5.6).
+// CashWise AI — animated welcome screen (v5.6; the wallet
+// opening was added in v6.0, restored in v7.1 — the belt
+// wallet from v7.0 is gone, the earlier wallet is back).
 //
-// Shown once right after an account is created or the user
-// signs in, before the home page: the logo scales in with a
-// soft gold glow, "Welcome, <name>" slides up, and a gold bar
-// grows — then the home page takes over after ~1.8 seconds.
-// Returning users (already logged in) skip it and go straight
-// to home.
+// Shown on EVERY app open, and right after an account is
+// created or the user signs in, before the home page: the
+// wallet scales in, its lid flips open and a gold card slides
+// out of it, "Welcome, <name>" slides up, and a gold bar
+// grows — then the home page takes over after ~2 seconds.
 
 import 'dart:async';
 
@@ -30,6 +31,8 @@ class _WelcomeTransitionScreenState extends State<WelcomeTransitionScreen>
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
   late final Animation<double> _barWidth;
+  // The wallet lid flipping open + the card sliding out (v6.0).
+  late final Animation<double> _walletOpen;
 
   @override
   void initState() {
@@ -62,9 +65,15 @@ class _WelcomeTransitionScreenState extends State<WelcomeTransitionScreen>
         curve: const Interval(0.5, 1, curve: Curves.easeOut),
       ),
     );
+    _walletOpen = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.75, curve: Curves.easeOut),
+      ),
+    );
     _controller.forward();
     // Hand over to the home page once the animation has played.
-    Timer(const Duration(milliseconds: 1800), () {
+    Timer(const Duration(milliseconds: 2000), () {
       if (mounted) {
         context.read<ExpenseStore>().dismissWelcome();
       }
@@ -94,29 +103,111 @@ class _WelcomeTransitionScreenState extends State<WelcomeTransitionScreen>
             children: [
               ScaleTransition(
                 scale: _logoScale,
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFD97706), Color(0xFFC9A227)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFC9A227)
-                            .withValues(alpha: 0.4),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
+                // The wallet (v6.0): a gold card slides out of
+                // it as its lid flips open, then home takes over.
+                child: SizedBox(
+                  width: 120,
+                  height: 130,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      // Gold card sliding out of the wallet.
+                      AnimatedBuilder(
+                        animation: _walletOpen,
+                        builder: (context, _) => Opacity(
+                          opacity: _walletOpen.value,
+                          child: Transform.translate(
+                            offset: Offset(
+                              0,
+                              34 - 62 * _walletOpen.value,
+                            ),
+                            child: Container(
+                              width: 56,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: CashWiseTheme.gold,
+                                  width: 1.5,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x33000000),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 6),
+                                  child: Icon(
+                                    Icons.credit_card,
+                                    size: 16,
+                                    color: CashWiseTheme.gold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Wallet body.
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFD97706),
+                              Color(0xFFC9A227),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFC9A227)
+                                  .withValues(alpha: 0.4),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.account_balance_wallet,
+                          size: 48,
+                          color: Colors.white,
+                        ),
+                      ),
+                      // Lid flipping open over the top of the wallet.
+                      AnimatedBuilder(
+                        animation: _walletOpen,
+                        builder: (context, _) => Transform(
+                          alignment: Alignment.topCenter,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.002)
+                            ..rotateX(-1.1 * _walletOpen.value),
+                          child: Opacity(
+                            opacity: 1 - 0.6 * _walletOpen.value,
+                            child: Container(
+                              width: 96,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFB45309),
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(48),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
-                  ),
-                  child: const Icon(
-                    Icons.account_balance_wallet,
-                    size: 48,
-                    color: Colors.white,
                   ),
                 ),
               ),

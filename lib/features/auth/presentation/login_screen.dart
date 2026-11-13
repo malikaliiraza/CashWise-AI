@@ -113,6 +113,14 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _emailError = strings.invalidEmail);
       return;
     }
+    // A shape-valid address with an unknown provider gets its
+    // own error (v6.0): "The provider 'l.com' is not a
+    // recognised provider." — never just "invalid email".
+    final domain = ExpenseStore.emailDomain(email);
+    if (domain != null && !ExpenseStore.isKnownProvider(domain)) {
+      setState(() => _emailError = strings.unknownProvider(domain));
+      return;
+    }
     if (password.isEmpty) {
       setState(() => _passwordError = strings.fillAllFields);
       return;
