@@ -1,16 +1,17 @@
 // CashWise AI — History page (v5.9).
 //
-// One place for the past: every budget (tap one to switch to
-// its book), the full Loan Ledger history, and the deleted
-// history — every expense and loan entry ever deleted, with a
-// Restore button to put it back.
+// One place for the past: every budget (tap one to open its
+// own screen), the full Loan Ledger history, and the Bin —
+// every expense and loan entry ever deleted, kept for 30 days
+// with a Restore button to put it back.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
-import '../models/udhar_entry.dart';
+import 'budget_detail_screen.dart';
 import 'udhar_detail_sheet.dart';
 
 class HistoryScreen extends StatelessWidget {
@@ -60,9 +61,7 @@ class HistoryScreen extends StatelessWidget {
                       ),
                     )
                   else
-                    ...store.budgets.asMap().entries.map((e) {
-                      final i = e.key;
-                      final b = e.value;
+                    ...store.budgets.map((b) {
                       final isActive = b.id == store.activeBudgetId;
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
@@ -74,10 +73,15 @@ class HistoryScreen extends StatelessWidget {
                             foregroundColor: isActive
                                 ? Colors.white
                                 : CashWiseTheme.lightAccent,
-                            child: Text('${i + 1}'),
+                            child: Text(
+                              store
+                                  .budgetDisplayName(b)
+                                  .characters
+                                  .first,
+                            ),
                           ),
                           title: Text(
-                            '${strings.budget} ${i + 1} — '
+                            '${store.budgetDisplayName(b)} — '
                             '${store.formatAmount(b.amount)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
@@ -95,7 +99,13 @@ class HistoryScreen extends StatelessWidget {
                                   color: CashWiseTheme.gold,
                                 )
                               : const Icon(Icons.chevron_right),
-                          onTap: () => store.switchBudget(b.id),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              slideRoute(
+                                BudgetDetailScreen(budget: b),
+                              ),
+                            );
+                          },
                         ),
                       );
                     }),
@@ -146,7 +156,14 @@ class HistoryScreen extends StatelessWidget {
                         ),
                       );
                     }),
-                  sectionTitle(strings.deletedItems),
+                  sectionTitle(strings.bin),
+                  Text(
+                    strings.binAutoRemove,
+                    style: const TextStyle(
+                      color: CashWiseTheme.secondaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   if (deleted.isEmpty)
                     Text(
                       strings.noDeletedItems,
@@ -176,7 +193,8 @@ class HistoryScreen extends StatelessWidget {
                           ),
                           subtitle: Text(
                             '${store.formatAmount((item['amount'] as num?)?.toDouble() ?? 0)}'
-                            '${deletedAt == null ? '' : ' • ${deletedAt.day}/${deletedAt.month}/${deletedAt.year}'}',
+                            '${deletedAt == null ? '' : ' • ${store.formatDate(deletedAt)}'}'
+                            ' • ${strings.daysLeftInBin(store.binDaysLeft(item))}',
                           ),
                           trailing: TextButton.icon(
                             icon: const Icon(Icons.restore, size: 18),
