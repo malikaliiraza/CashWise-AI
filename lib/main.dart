@@ -47,9 +47,12 @@ class CashWiseApp extends StatelessWidget {
             ),
             // Login / register first — the app never opens
             // straight into the expenses (v4.1).
+            // The welcome screen plays on every app open
+            // (v6.0): the wallet opens, then home. After a
+            // login/register it plays too (showWelcome).
             home: !store.isLoggedIn
                 ? const LoginScreen()
-                : store.showWelcome
+                : store.showWelcome || store.showLaunchWelcome
                     ? const WelcomeTransitionScreen()
                     : const HomeScreen(),
           );
