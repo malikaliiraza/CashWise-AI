@@ -13,22 +13,30 @@ class BudgetPeriod {
   final double amount;
   final DateTime createdAt;
 
+  /// The name the user gave this budget (v7.0) — empty for
+  /// budgets made before naming existed; the screens then fall
+  /// back to "Budget 1", "Budget 2", ...
+  final String name;
+
   const BudgetPeriod({
     required this.id,
     required this.amount,
     required this.createdAt,
+    this.name = '',
   });
 
-  BudgetPeriod copyWith({double? amount}) => BudgetPeriod(
+  BudgetPeriod copyWith({double? amount, String? name}) => BudgetPeriod(
         id: id,
         amount: amount ?? this.amount,
         createdAt: createdAt,
+        name: name ?? this.name,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'amount': amount,
         'createdAt': createdAt.toIso8601String(),
+        'name': name,
       };
 
   factory BudgetPeriod.fromJson(Map<String, dynamic> json) =>
@@ -36,5 +44,6 @@ class BudgetPeriod {
         id: json['id'] as String,
         amount: (json['amount'] as num).toDouble(),
         createdAt: DateTime.parse(json['createdAt'] as String),
+        name: json['name'] as String? ?? '',
       );
 }
