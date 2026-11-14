@@ -42,7 +42,7 @@ class NotificationService {
     try {
       await _plugin.show(
         2,
-        'CashWise AI',
+        'Hisaab Kitaab',
         body,
         const NotificationDetails(
           android: AndroidNotificationDetails(
@@ -65,7 +65,7 @@ class NotificationService {
     try {
       await _plugin.show(
         1,
-        'CashWise AI',
+        'Hisaab Kitaab',
         body,
         const NotificationDetails(
           android: AndroidNotificationDetails(

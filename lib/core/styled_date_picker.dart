@@ -5,7 +5,7 @@
 // 6 rows x 7 days (42 cells) — leading and trailing days of
 // the neighbouring months fill the spare cells, so the dialog
 // never grows or shrinks as the days change. Rounded 24px,
-// the theme's colours (warm brass in light mode, soft gold in
+// the theme's colours (deep teal in light mode, light teal in
 // dark mode), professional Inter type. Used everywhere the
 // user picks a date: Add Expense, expense edit, Udhar.
 
@@ -118,7 +118,7 @@ class _FixedCalendarDialogState extends State<_FixedCalendarDialog> {
     final isUrdu =
         Localizations.localeOf(context).languageCode == 'ur';
     final accent =
-        isDark ? const Color(0xFFD4A017) : CashWiseTheme.lightAccent;
+        isDark ? const Color(0xFF5EEAD4) : CashWiseTheme.lightAccent;
     final today = DateTime.now();
     final todayDay = DateTime(today.year, today.month, today.day);
     const monthNames = [
@@ -196,7 +196,9 @@ class _FixedCalendarDialogState extends State<_FixedCalendarDialog> {
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: CashWiseTheme.secondaryText,
+                              color: isDark
+                                  ? CashWiseTheme.darkSecondaryText
+                                  : CashWiseTheme.secondaryText,
                             ),
                           ),
                         ),
@@ -308,10 +310,10 @@ class _FixedCalendarDialogState extends State<_FixedCalendarDialog> {
 }
 
 /// A stylish fixed-size time picker, matching the calendar
-/// (v6.0): hour + minute SCROLL WHEELS — flick or drag to spin
-/// through the values, the selected one big and clear on a gold
-/// band — an AM/PM switch, gold accents, fixed size (340 x 400)
-/// so it never resizes. In Urdu mode the digits and AM/PM labels
+/// (v6.0, v7.2): hour + minute + AM/PM as THREE SCROLL WHEELS
+/// — flick or drag to spin through the values, the selected one
+/// big and clear on a teal band that exactly fits one row, so
+/// nothing is clipped. In Urdu mode the digits and AM/PM labels
 /// are Urdu too. Used for due times and payment times.
 Future<TimeOfDay?> showStyledTimePicker({
   required BuildContext context,
@@ -338,6 +340,7 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
   late bool _isPm;
   late final FixedExtentScrollController _hourController;
   late final FixedExtentScrollController _minuteController;
+  late final FixedExtentScrollController _periodController;
 
   static const _urduDigits = {
     '0': '۰',
@@ -366,18 +369,24 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
     _hourController =
         FixedExtentScrollController(initialItem: _hour12 - 1);
     _minuteController = FixedExtentScrollController(initialItem: _minute);
+    _periodController =
+        FixedExtentScrollController(initialItem: _isPm ? 1 : 0);
   }
 
   @override
   void dispose() {
     _hourController.dispose();
     _minuteController.dispose();
+    _periodController.dispose();
     super.dispose();
   }
 
-  /// One scroll wheel (v6.0): flick or drag to spin through the
-  /// values; the selected one sits on the gold band in the
-  /// middle, big and clear.
+  /// One scroll wheel (v7.2): itemExtent, row height, font size
+  /// and the teal selection band all agree at 56dp, so the
+  /// selected row is FULLY visible — the selected digits are
+  /// 30sp inside a 56dp row, never clipped by the band.
+  /// [labels] are the strings shown per index (digits for hour
+  /// and minute, AM/PM for the period wheel).
   Widget _wheel({
     required FixedExtentScrollController controller,
     required int itemCount,
@@ -385,13 +394,16 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
     required ValueChanged<int> onSelected,
     required Color accent,
     required bool urdu,
+    required List<String> labels,
+    double width = 84,
+    double selectedFontSize = 30,
   }) {
     return SizedBox(
-      width: 84,
-      height: 180,
+      width: width,
+      height: 168,
       child: ListWheelScrollView.useDelegate(
         controller: controller,
-        itemExtent: 48,
+        itemExtent: 56,
         perspective: 0.003,
         diameterRatio: 1.6,
         physics: const FixedExtentScrollPhysics(),
@@ -402,14 +414,18 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
             final isSelected = index == selected;
             return Center(
               child: Text(
-                _digits(index.toString().padLeft(2, '0'), urdu),
+                labels[index],
+                maxLines: 1,
+                softWrap: false,
                 style: GoogleFonts.inter(
-                  fontSize: isSelected ? 34 : 24,
+                  fontSize: isSelected ? selectedFontSize : 20,
                   fontWeight:
                       isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected
                       ? accent
-                      : CashWiseTheme.secondaryText,
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? CashWiseTheme.darkSecondaryText
+                          : CashWiseTheme.secondaryText),
                 ),
               ),
             );
@@ -455,30 +471,18 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
                 ],
               ),
               const SizedBox(height: 20),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(
-                    value: false,
-                    label: Text(isUrdu ? 'صبح' : 'AM'),
-                  ),
-                  ButtonSegment(
-                    value: true,
-                    label: Text(isUrdu ? 'شام' : 'PM'),
-                  ),
-                ],
-                selected: {_isPm},
-                onSelectionChanged: (s) =>
-                    setState(() => _isPm = s.first),
-              ),
-              const SizedBox(height: 16),
-              // Scroll wheels with a gold band on the selected row.
+              // Scroll wheels with a teal band on the selected row
+              // (v7.2): hour + minute + AM/PM as a THIRD wheel —
+              // no AM/PM toggle buttons any more. The band is
+              // 56dp, exactly one itemExtent tall, so the
+              // selected row sits fully inside it.
               SizedBox(
-                height: 180,
+                height: 168,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      height: 48,
+                      height: 56,
                       decoration: BoxDecoration(
                         color: accent.withValues(alpha: 0.08),
                         border: Border.symmetric(
@@ -499,11 +503,17 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
                               setState(() => _hour12 = i + 1),
                           accent: accent,
                           urdu: isUrdu,
+                          labels: List.generate(
+                            12,
+                            (i) => _digits(
+                                (i + 1).toString().padLeft(2, '0'),
+                                isUrdu),
+                          ),
                         ),
                         Text(
                           ':',
                           style: GoogleFonts.inter(
-                            fontSize: 34,
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
                             color: accent,
                           ),
@@ -516,6 +526,26 @@ class _FixedTimeDialogState extends State<_FixedTimeDialog> {
                               setState(() => _minute = i),
                           accent: accent,
                           urdu: isUrdu,
+                          labels: List.generate(
+                            60,
+                            (i) => _digits(
+                                i.toString().padLeft(2, '0'), isUrdu),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _wheel(
+                          controller: _periodController,
+                          itemCount: 2,
+                          selected: _isPm ? 1 : 0,
+                          onSelected: (i) =>
+                              setState(() => _isPm = i == 1),
+                          accent: accent,
+                          urdu: isUrdu,
+                          width: 68,
+                          selectedFontSize: 24,
+                          labels: isUrdu
+                              ? const ['صبح', 'شام']
+                              : const ['AM', 'PM'],
                         ),
                       ],
                     ),

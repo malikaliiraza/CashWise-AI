@@ -239,6 +239,23 @@ class AppLocale {
       _get('welcomeName').replaceAll('{name}', name);
   String get continueWithGoogle => _get('continueWithGoogle');
   String get googleSignInError => _get('googleSignInError');
+  String get punchLine => _get('punchLine');
+  String get captcha => _get('captcha');
+  String get enterCaptcha => _get('enterCaptcha');
+  String get captchaWrong => _get('captchaWrong');
+  String get refreshCaptcha => _get('refreshCaptcha');
+  String get lentWhen => _get('lentWhen');
+  String get borrowedWhen => _get('borrowedWhen');
+  String get lentOn => _get('lentOn');
+  String get lentAt => _get('lentAt');
+  String get borrowedOn => _get('borrowedOn');
+  String get borrowedAt => _get('borrowedAt');
+  String get reminderSection => _get('reminderSection');
+  String get reminderDate => _get('reminderDate');
+  String get reminderTime => _get('reminderTime');
+  String get spent => _get('spent');
+  String get noBudgetsYet => _get('noBudgetsYet');
+  String get time => _get('time');
 
   /// e.g. "Monthly budget updated to $500." — {amount} is replaced with
   /// the already-formatted amount, so no language mixing is introduced.
@@ -324,7 +341,7 @@ const List<AppLocale> appLocales = [
       'passwordsDoNotMatch': 'Passwords do not match.',
       'deleteExpenseConfirm': 'Are you sure you want to delete this expense?',
       'statistics': 'Statistics',
-      'welcomeTitle': 'Welcome to CashWise AI',
+      'welcomeTitle': 'Welcome to Hisaab Kitaab',
       'welcomeSubtitle':
           'Your money, beautifully organized — every budget and every loan, always in your hands.',
       'viewDetails': 'View details',
@@ -343,7 +360,7 @@ const List<AppLocale> appLocales = [
       'youBorrowed': 'You borrowed',
       'addUdhar': 'Add udhar',
       'settled': 'Settled',
-      'noUdharEntries': 'No udhar entries yet.',
+      'noUdharEntries': 'No entries yet.',
       'note': 'Note',
       'moneyLent': 'Receivables',
       'moneyBorrowed': 'Payables',
@@ -395,17 +412,17 @@ const List<AppLocale> appLocales = [
       'nameInUrdu': 'Name in Urdu',
       'features': 'Features',
       'aboutDescription':
-          'CashWise AI is a personal finance companion built for everyday money in Pakistan. Set monthly budgets \u2014 one or several \u2014 track every expense by category, lend and borrow with due dates, times and partial payments in the Loan Ledger, and set your own reminders for any payment — the app only ever reminds you when you asked it to. A local cash-flow predictor shows when your budget will run out, before it happens. Everything works offline, in English or Urdu, with your data staying on your device.',
+          'Hisaab Kitaab is a personal finance companion built for everyday money in Pakistan. Set monthly budgets \u2014 one or several \u2014 track every expense by category, lend and borrow with due dates, times and partial payments in the Loan Ledger, and set your own reminders for any payment — the app only ever reminds you when you asked it to. A local cash-flow predictor shows when your budget will run out, before it happens. Everything works offline, in English or Urdu, with your data staying on your device.',
       'aboutFeatures':
           '\u2022 Monthly budgets \u2014 named by you, each with its own screen, expenses and alerts\n\u2022 Expenses \u2014 categories, search, filters and a pie chart of where the money goes\n\u2022 Loan Ledger \u2014 Receivables and Payables, due dates and times, partial payments, full history\n\u2022 Reminders \u2014 only the ones you set yourself, for any payment or budget, always in the future — plus a Bin that keeps deleted items for 30 days\n\u2022 AI cash-flow predictor \u2014 daily average, projected month-end spend and run-out date\n\u2022 English and Urdu \u2014 full translation, Urdu script throughout, right-to-left layout\n\u2022 Light and dark themes, and a wallet welcome every time the app opens\n\u2022 Works fully offline \u2014 no account, no server, no internet needed',
       'aboutDeveloperTitle': 'About the developer',
       'aboutDeveloper':
-          'CashWise AI is built by Malik Ali Raza — a Flutter & Web Developer and Software Engineering student at Riphah International University, Sahiwal. He builds real apps people actually use, with clean architecture, and is open to internships and freelance work.',
+          'Hisaab Kitaab is built by Malik Ali Raza — a Flutter & Web Developer and Software Engineering student at Riphah International University, Sahiwal. He builds real apps people actually use, with clean architecture, and is open to internships and freelance work.',
       'aboutPrivacy':
-          'Privacy: your budgets, expenses and loans are stored only on this device. CashWise AI never uploads your financial data anywhere.',
-      'whatsNew': "What's new in v7.1",
+          'Privacy: your budgets, expenses and loans are stored only on this device. Hisaab Kitaab never uploads your financial data anywhere.',
+      'whatsNew': "What's new in v7.3",
       'whatsNewText':
-          '• The earlier wallet is back on the welcome page: its lid flips open and a gold card slides out\n• The home cards are clean again — every option lives inside its own category screen, each laid out differently\n• Calendars are fully open: every date is pickable, none is hidden or greyed out\n• Reminders only ever come when you set them — set one on any loan entry or payment, always in the future\n• The Reminders page shows only your reminders: Due now and Upcoming\n• About now says who built CashWise AI',
+          '• A new wallet + phone logo — navy wallet, fanned teal banknotes and a teal phone with a gold bell — in the app, on the launcher and on the web\n• A new welcome: the phone rises out of the wallet, its screen lights up with a gold glow, and the home page grows out of the phone screen\n• A new look — Deep Midnight Teal + Soft Pearl: deep midnight teal headers and buttons on a soft pearl background, pearl text in dark mode',
       'paymentTime': 'Payment time',
       'history': 'History',
       'editBudget': 'Edit budget',
@@ -455,6 +472,23 @@ const List<AppLocale> appLocales = [
       'continueWithGoogle': 'Continue with Google',
       'googleSignInError':
           'Google sign-in did not complete. Try again.',
+      'punchLine': 'Your money, beautifully organized.',
+      'captcha': 'Captcha',
+      'enterCaptcha': 'Enter the captcha',
+      'captchaWrong': 'The captcha does not match. Try again.',
+      'refreshCaptcha': 'New captcha',
+      'lentWhen': 'When was it lent?',
+      'borrowedWhen': 'When was it borrowed?',
+      'lentOn': 'Lent on',
+      'lentAt': 'Lent at',
+      'borrowedOn': 'Borrowed on',
+      'borrowedAt': 'Borrowed at',
+      'reminderSection': 'Reminder (optional)',
+      'reminderDate': 'Reminder date',
+      'reminderTime': 'Reminder time',
+      'spent': 'Spent',
+      'noBudgetsYet': 'No budgets yet',
+      'time': 'Time',
       'cashFlowPrediction': 'Cash-flow prediction',
       'projectedMonthEnd': 'Projected month-end spend',
       'dailyAverage': 'Daily average',
@@ -546,7 +580,7 @@ const List<AppLocale> appLocales = [
       'passwordsDoNotMatch': 'پاس ورڈ میل نہیں کھاتے۔',
       'deleteExpenseConfirm': 'کیا آپ واقعی یہ خرچ حذف کرنا چاہتے ہیں؟',
       'statistics': 'اعداد و شمار',
-      'welcomeTitle': 'CashWise AI میں خوش آمدید',
+      'welcomeTitle': 'حساب کتاب میں خوش آمدید',
       'welcomeSubtitle':
           'آپ کا پیسہ، خوبصورتی سے منظم — ہر بجٹ اور ہر قرض، ہمیشہ آپ کے ہاتھ میں۔',
       'viewDetails': 'تفصیلات دیکھیں',
@@ -617,17 +651,17 @@ const List<AppLocale> appLocales = [
       'nameInUrdu': 'اردو میں نام',
       'features': 'خصوصیات',
       'aboutDescription':
-          'کیش وائز اے آئی پاکستان میں روزمرہ کے پیسوں کے لیے بنایا گیا ذاتی مالی ساتھی ہے۔ ایک یا کئی ماہانہ بجٹ بنائیں، ہر خرچ کو زمرے کے حساب سے ٹریک کریں، ادھار کھاتے میں مقررہ تاریخ، وقت اور جزوی ادائیگیوں کے ساتھ پیسے دیں اور لیں، اور کسی بھی ادائیگی کے لیے اپنی یاد دہانی لگائیں — ایپ صرف تب یاد دلائے گی جب آپ نے کہا ہو۔ مقامی کیش فلو پیش گوئی بتاتی ہے کہ بجٹ کب ختم ہوگا — ختم ہونے سے پہلے۔ سب کچھ آف لائن کام کرتا ہے، انگریزی یا اردو میں، اور آپ کا ڈیٹا آپ کے آلے پر ہی رہتا ہے۔',
+          'حساب کتاب پاکستان میں روزمرہ کے پیسوں کے لیے بنایا گیا ذاتی مالی ساتھی ہے۔ ایک یا کئی ماہانہ بجٹ بنائیں، ہر خرچ کو زمرے کے حساب سے ٹریک کریں، ادھار کھاتے میں مقررہ تاریخ، وقت اور جزوی ادائیگیوں کے ساتھ پیسے دیں اور لیں، اور کسی بھی ادائیگی کے لیے اپنی یاد دہانی لگائیں — ایپ صرف تب یاد دلائے گی جب آپ نے کہا ہو۔ مقامی کیش فلو پیش گوئی بتاتی ہے کہ بجٹ کب ختم ہوگا — ختم ہونے سے پہلے۔ سب کچھ آف لائن کام کرتا ہے، انگریزی یا اردو میں، اور آپ کا ڈیٹا آپ کے آلے پر ہی رہتا ہے۔',
       'aboutFeatures':
           '• ماہانہ بجٹ — اپنے نام والے کئی بجٹ، ہر ایک کی اپنی اسکرین، خرچے اور الرٹس\n• خرچے — زمرے، تلاش، فلٹر اور پائی چارٹ جس سے پتا چلے پیسہ کہاں گیا\n• ادھار کھاتہ — وصولیاں اور ادائیگیاں، مقررہ تاریخ و وقت، جزوی ادائیگیاں، مکمل تاریخ\n• یاد دہانیاں — صرف آپ کی لگائی ہوئی یاد دہانیاں، کسی بھی ادائیگی یا بجٹ کے لیے، ہمیشہ مستقبل میں — اور بن جو حذف شدہ اشیاء 30 دن رکھتا ہے\n• اے آئی کیش فلو پیش گوئی — روزانہ اوسط، مہینے کے آخر کا تخمینہ اور بجٹ ختم ہونے کی تاریخ\n• انگریزی اور اردو — مکمل ترجمہ، ہر جگہ اردو رسم الخط، دائیں سے بائیں ترتیب\n• ہلکا اور گہرا تھیم، اور ہر بار ایپ کھلنے پر والٹ خوش آمدید\n• مکمل طور پر آف لائن — نہ اکاؤنٹ، نہ سرور، نہ انٹرنیٹ کی ضرورت',
       'aboutDeveloperTitle': 'ڈویلپر کے بارے میں',
       'aboutDeveloper':
-          'CashWise AI ملک علی رضا نے بنائی ہے — ایک Flutter اور Web Developer اور Riphah International University, Sahiwal میں Software Engineering کے طالب علم۔ وہ صاف architecture کے ساتھ حقیقی ایپس بناتے ہیں جو لوگ واقعی استعمال کرتے ہیں، اور انٹرنشپ اور فری لانس کام کے لیے دستیاب ہیں۔',
+          'حساب کتاب ملک علی رضا نے بنائی ہے — ایک Flutter اور Web Developer اور Riphah International University, Sahiwal میں Software Engineering کے طالب علم۔ وہ صاف architecture کے ساتھ حقیقی ایپس بناتے ہیں جو لوگ واقعی استعمال کرتے ہیں، اور انٹرنشپ اور فری لانس کام کے لیے دستیاب ہیں۔',
       'aboutPrivacy':
-          'رازداری: آپ کے بجٹ، خرچے اور قرض صرف اس آلے پر محفوظ ہوتے ہیں۔ کیش وائز اے آئی آپ کا مالی ڈیٹا کہیں بھی نہیں بھیجتا۔',
-      'whatsNew': 'v7.1 میں نیا کیا ہے',
+          'رازداری: آپ کے بجٹ، خرچے اور قرض صرف اس آلے پر محفوظ ہوتے ہیں۔ حساب کتاب آپ کا مالی ڈیٹا کہیں بھی نہیں بھیجتا۔',
+      'whatsNew': 'v7.3 میں نیا کیا ہے',
       'whatsNewText':
-          '• خوش آمدید صفحے پر پہلے والا والٹ واپس: ڈھکن کھلتا ہے اور سونے کا کارڈ باہر آتا ہے\n• ہوم کارڈز پھر صاف — ہر اختیار اپنی کیٹیگری کی اسکرین کے اندر ہے، ہر ایک کی ترتیب الگ\n• کیلنڈر مکمل کھلے: ہر تاریخ منتخب ہو سکتی ہے، کوئی چھپی یا بند نہیں\n• یاد دہانی صرف تب آئے گی جب آپ خود لگائیں گے — کسی بھی ادھار یا ادائیگی پر، ہمیشہ مستقبل میں\n• یاد دہانیوں کا صفحہ صرف آپ کی یاد دہانیاں دکھاتا ہے: اب واجب اور آنے والی\n• About میں اب یہ بھی لکھا ہے کہ CashWise AI کس نے بنائی',
+          '• نیا والٹ + فون لوگو — نیلا والٹ، سبز نوٹ اور فون، سنہری گھنٹی — ایپ، لانچر اور ویب پر\n• نیا خوش آمدید: فون والٹ سے اوپر اٹھتا ہے، اس کی اسکرین سنہری روشنی سے روشن ہوتی ہے، اور ہوم پیج فون کی اسکرین سے ظاہر ہوتا ہے\n• نیا انداز — گہرا نیلگوں سبز + نرم موتی: نرم موتی پس منظر پر گہرے سبز ہیڈر اور بٹن، ڈارک موڈ میں موتی رنگ کا متن',
       'paymentTime': 'ادائیگی کا وقت',
       'history': 'تاریخ',
       'editBudget': 'بجٹ بدلیں',
@@ -677,6 +711,23 @@ const List<AppLocale> appLocales = [
       'continueWithGoogle': 'گوگل کے ساتھ جاری رکھیں',
       'googleSignInError':
           'گوگل سائن ان مکمل نہیں ہوا۔ دوبارہ کوشش کریں۔',
+      'punchLine': 'آپ کا پیسہ، خوبصورتی سے منظم۔',
+      'captcha': 'کیپچا',
+      'enterCaptcha': 'کیپچا درج کریں',
+      'captchaWrong': 'کیپچا میل نہیں کھاتا۔ دوبارہ کوشش کریں۔',
+      'refreshCaptcha': 'نیا کیپچا',
+      'lentWhen': 'یہ کب دیا تھا؟',
+      'borrowedWhen': 'یہ کب لیا تھا؟',
+      'lentOn': 'دینے کی تاریخ',
+      'lentAt': 'دینے کا وقت',
+      'borrowedOn': 'لینے کی تاریخ',
+      'borrowedAt': 'لینے کا وقت',
+      'reminderSection': 'یاد دہانی (اختیاری)',
+      'reminderDate': 'یاد دہانی کی تاریخ',
+      'reminderTime': 'یاد دہانی کا وقت',
+      'spent': 'خرچ',
+      'noBudgetsYet': 'ابھی کوئی بجٹ نہیں ہے',
+      'time': 'وقت',
       'cashFlowPrediction': 'نقد بہاؤ کی پیش گوئی',
       'projectedMonthEnd': 'مہینے کے آخر تک متوقع خرچ',
       'dailyAverage': 'یومیہ اوسط',
