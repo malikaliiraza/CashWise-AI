@@ -253,6 +253,25 @@ class ExpenseStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The user-set loan reminder linked to one loan entry, if
+  /// any (v7.2) — the add/edit form shows its bell ON with
+  /// this reminder's date/time.
+  Map<String, dynamic>? customReminderForEntry(String entryId) {
+    final matches = _customReminders.where(
+      (r) => r['kind'] == 'loan' && r['entryId'] == entryId,
+    );
+    return matches.isEmpty ? null : matches.first;
+  }
+
+  /// Drop every reminder linked to one loan entry (v7.2) —
+  /// used when the entry's reminder is switched off or
+  /// replaced from the add/edit form.
+  Future<void> removeCustomRemindersForEntry(String entryId) async {
+    _customReminders.removeWhere((r) => r['entryId'] == entryId);
+    await _save();
+    notifyListeners();
+  }
+
   // --- The Bin (v7.0) ---
   /// Drop deleted items older than [binDays] days. Returns how
   /// many were dropped.
@@ -612,10 +631,10 @@ class ExpenseStore extends ChangeNotifier {
     return '${_urduDigits('$hour12')}:${_urduDigits(time.minute.toString().padLeft(2, '0'))} $period';
   }
 
-  /// The brand name: "CashWise AI" in English, "کیش وائز اے آئی"
-  /// in Urdu mode.
+  /// The brand name: "Hisaab Kitaab" in English, "حساب کتاب"
+  /// in Urdu mode (renamed from CashWise AI in v7.2).
   String get displayBrand =>
-      locale.code == 'ur' ? transliterate('CashWise AI') : 'CashWise AI';
+      locale.code == 'ur' ? 'حساب کتاب' : 'Hisaab Kitaab';
 
   /// True right after a successful login / registration, so the
   /// app can show the animated welcome screen once before the
