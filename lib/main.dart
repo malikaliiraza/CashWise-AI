@@ -31,7 +31,7 @@ class CashWiseApp extends StatelessWidget {
         builder: (context, store, _) {
           final locale = store.locale;
           return MaterialApp(
-            title: 'CashWise AI',
+            title: 'Hisaab Kitaab',
             debugShowCheckedModeBanner: false,
             theme: CashWiseTheme.light,
             darkTheme: CashWiseTheme.dark,
