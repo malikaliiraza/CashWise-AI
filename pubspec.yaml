@@ -1,5 +1,5 @@
 name: cashwise_ai
-description: "Flutter finance coach — offline expenses, cash-flow predictor, Loan Ledger with reminders, English/Urdu, Rs. amounts."
+description: "Hisaab Kitaab — Flutter finance coach: offline expenses, cash-flow predictor, Loan Ledger with reminders, English/Urdu, Rs. amounts."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -26,3 +26,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+    - assets/welcome_wallet.png
+    - assets/welcome_phone.png
