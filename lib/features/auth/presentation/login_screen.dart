@@ -1,4 +1,4 @@
-// CashWise AI — login / register screen (v4.5).
+// Hisaab Kitaab — login / register screen (v7.2).
 //
 // Local account only: the account lives on this device in
 // SharedPreferences (see ExpenseStore.register/login). There is no
@@ -14,11 +14,18 @@
 // - One error at a time, in order: length, uppercase, lowercase,
 //   number, special character. Confirm password: empty -> its own
 //   error only; mismatch -> "Passwords do not match." only.
+// - Every field error shows in full (errorMaxLines: 3) so long
+//   errors wrap instead of truncating with "...".
+// - A local captcha guards both forms (v7.2): a wrong captcha blocks
+//   submit and a fresh code is generated.
+// - Compact, one screen, no scroll on a normal phone (v7.2).
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/captcha.dart';
 import '../../../core/google_auth_service.dart';
+import '../../../core/google_g_icon.dart';
 import '../../../core/theme.dart';
 import '../../expenses/data/expense_store.dart';
 
@@ -34,6 +41,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _captchaController = TextEditingController();
+  final _captchaKey = GlobalKey<CaptchaFieldState>();
   late bool _isLogin;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -57,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _captchaController.dispose();
     super.dispose();
   }
 
@@ -67,6 +77,19 @@ class _LoginScreenState extends State<LoginScreen> {
     _confirmError = null;
     _googleError = null;
   }
+
+  /// Compact field decoration: dense, and every error shows in full.
+  InputDecoration _fieldDecoration(String label, String? error) =>
+      InputDecoration(
+        labelText: label,
+        errorText: error,
+        errorMaxLines: 3,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 4,
+        ),
+      );
 
   /// Continue with Google: pick a Google account, and the local
   /// account is created from that profile (name + email).
@@ -156,6 +179,11 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
     }
+    // Captcha last: a wrong code blocks submit, and the captcha
+    // regenerates a fresh code on failure (inside validate).
+    if (!(_captchaKey.currentState?.validate() ?? false)) {
+      return;
+    }
     final ok = _isLogin
         ? await store.login(email: email, password: password)
         : await store.register(
@@ -178,56 +206,77 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Directionality(
       textDirection: locale.isRtl ? TextDirection.rtl : TextDirection.ltr,
+      // No scroll view: the compact layout fits one screen, and the
+      // keyboard overlays instead of resizing the form.
       child: Scaffold(
-        body: Center(
-          child: SingleChildScrollView(
+        resizeToAvoidBottomInset: false,
+        body: SafeArea(
+          child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 0,
+                ),
                 child: Card(
+                  margin: EdgeInsets.zero,
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(
-                          Icons.account_balance_wallet,
-                          size: 48,
-                          color: CashWiseTheme.accentFor(context),
+                        Image.asset(
+                          'assets/logo.png',
+                          height: 40,
+                          errorBuilder: (ctx, err, stack) => Icon(
+                            Icons.account_balance_wallet,
+                            size: 40,
+                            color: CashWiseTheme.accentFor(context),
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 6),
                         Text(
                           store.displayBrand,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 26,
+                          style: const TextStyle(
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            height: 1.0,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
-                          strings.aboutText,
+                          strings.punchLine,
                           textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.0,
                             color: CashWiseTheme.secondaryText,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 6),
                         Text(
                           _isLogin ? strings.login : strings.createAccount,
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            height: 1.0,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 6),
                         if (!_isLogin) ...[
                           TextField(
                             controller: _nameController,
-                            decoration: InputDecoration(
-                              labelText: strings.fullName,
-                              errorText: _nameError,
+                            decoration: _fieldDecoration(
+                              strings.fullName,
+                              _nameError,
                             ),
                             onChanged: (_) {
                               if (_nameError != null) {
@@ -235,14 +284,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                             },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 6),
                         ],
                         TextField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: strings.emailAddress,
-                            errorText: _emailError,
+                          decoration: _fieldDecoration(
+                            strings.emailAddress,
+                            _emailError,
                           ),
                           onChanged: (_) {
                             if (_emailError != null) {
@@ -250,14 +299,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           },
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 6),
                         TextField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: strings.password,
-                            errorText: _passwordError,
-                            errorMaxLines: 2,
+                          decoration: _fieldDecoration(
+                            strings.password,
+                            _passwordError,
+                          ).copyWith(
                             suffixIcon: IconButton(
                               // Slashed eye = hidden, plain eye =
                               // showing, so the state is visible.
@@ -278,13 +327,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         if (!_isLogin) ...[
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 6),
                           TextField(
                             controller: _confirmController,
                             obscureText: _obscureConfirm,
-                            decoration: InputDecoration(
-                              labelText: strings.confirmPassword,
-                              errorText: _confirmError,
+                            decoration: _fieldDecoration(
+                              strings.confirmPassword,
+                              _confirmError,
+                            ).copyWith(
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscureConfirm
@@ -303,45 +353,41 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                           ),
                         ],
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 6),
+                        CaptchaField(
+                          key: _captchaKey,
+                          controller: _captchaController,
+                          captchaLabel: strings.captcha,
+                          enterLabel: strings.enterCaptcha,
+                          wrongMessage: strings.captchaWrong,
+                          refreshTooltip: strings.refreshCaptcha,
+                        ),
+                        const SizedBox(height: 6),
                         ElevatedButton(
                           onPressed: _submit,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                            ),
+                          ),
                           child: Text(
                             _isLogin ? strings.login : strings.createAccount,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                '—',
-                                style: const TextStyle(
-                                  color: CashWiseTheme.secondaryText,
-                                ),
-                              ),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 6),
                         OutlinedButton.icon(
                           onPressed: _signInWithGoogle,
-                          icon: const Icon(Icons.g_mobiledata, size: 28),
+                          icon: const GoogleGIcon(size: 24),
                           label: Text(strings.continueWithGoogle),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 4),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                         ),
                         if (_googleError != null) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             _googleError!,
                             textAlign: TextAlign.center,
@@ -351,14 +397,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                         if (hasAccount) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           TextButton(
                             onPressed: () {
                               setState(() {
                                 _isLogin = !_isLogin;
                                 _clearErrors();
+                                _captchaKey.currentState?.reset();
                               });
                             },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 2,
+                              ),
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
                             child: Text(
                               _isLogin
                                   ? strings.dontHaveAccount
