@@ -1,4 +1,4 @@
-// CashWise AI — a delete (bin) icon with a hover effect (v7.0).
+// CashWise AI — a delete (bin) icon with a hover effect (v7.2).
 //
 // On a desktop or in the browser the icon gets a soft red
 // circle behind it and grows slightly while the pointer is
@@ -6,6 +6,8 @@
 // delete icon in the app uses this widget, so the behaviour
 // is the same everywhere — and a locked (disabled) icon never
 // reacts to a hover.
+//
+// v7.2: 40x40 tap target (was 36), default icon 22dp.
 
 import 'package:flutter/material.dart';
 
@@ -19,7 +21,7 @@ class DeleteIconButton extends StatefulWidget {
   const DeleteIconButton({
     super.key,
     required this.onPressed,
-    this.iconSize = 20,
+    this.iconSize = 22,
     this.tooltip,
   });
 
@@ -35,7 +37,7 @@ class _DeleteIconButtonState extends State<DeleteIconButton> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final enabled = widget.onPressed != null;
     final iconColor = !enabled
-        ? CashWiseTheme.secondaryText
+        ? CashWiseTheme.secondaryTextFor(context)
         : _hovered
             ? CashWiseTheme.danger
             : CashWiseTheme.danger.withValues(alpha: 0.75);
@@ -48,8 +50,8 @@ class _DeleteIconButtonState extends State<DeleteIconButton> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        width: 36,
-        height: 36,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: _hovered
