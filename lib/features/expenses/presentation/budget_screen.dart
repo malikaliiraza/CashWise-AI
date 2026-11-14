@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/gradient_button.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 
@@ -83,6 +82,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<ExpenseStore>();
     final strings = store.strings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark
+        ? CashWiseTheme.darkSecondaryText
+        : CashWiseTheme.secondaryText;
 
     return Scaffold(
       appBar: AppBar(
@@ -112,9 +115,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     Text(
                       '${strings.budget}: '
                       '${store.formatAmount(store.monthlyBudgetPkr)}',
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
+                      style: TextStyle(color: secondary),
                     ),
                   // Edit the active budget, or add another one.
                   // The whole system works the same on every
@@ -125,11 +126,25 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       segments: [
                         ButtonSegment(
                           value: false,
-                          label: Text(strings.editBudget),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              strings.editBudget,
+                              maxLines: 1,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
                         ),
                         ButtonSegment(
                           value: true,
-                          label: Text(strings.addAnotherBudget),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              strings.addAnotherBudget,
+                              maxLines: 1,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
                         ),
                       ],
                       selected: {_addingNew},
@@ -246,11 +261,68 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  GradientButton(
+                  _PrimaryButton(
                     label: strings.saveBudget,
                     onPressed: _save,
                   ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Primary button (v7.2): fixed 48dp, label fully visible —
+/// FittedBox scaleDown, one line, never ellipsised.
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _PrimaryButton({required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: SizedBox(
+        height: 48,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: enabled
+                  ? const [Color(0xFF0C4444), Color(0xFF0F766E)]
+                  : const [Color(0xFF9CA3AF), Color(0xFF6B7280)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

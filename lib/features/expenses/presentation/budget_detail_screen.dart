@@ -1,16 +1,17 @@
-// CashWise AI — one budget's own screen (v7.0).
+// Hisaab Kitaab — one budget's own home page (v7.2).
 //
-// Tapping a budget no longer just swaps the amount in the
-// summary card: every budget has its own screen, its own
-// system — its name (renameable), amount, spent, remaining,
-// daily average, projected month-end, its categories with
-// totals, and its own expense list. Going back shows the
-// budget list again, with the other budgets.
+// Tapping a budget opens its OWN home: its name, its totals,
+// then its own options as full-width rows — Details, Add
+// Expense, AI Predictor, Summary — ALL scoped to this budget
+// (StatisticsScreen / AddExpenseScreen with budgetId), never
+// the global active budget. Below the options: its categories
+// with totals and its own expense list. Going back shows the
+// budget list again.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/gradient_button.dart';
+import '../../../core/amount_row.dart';
 import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
@@ -18,11 +19,28 @@ import '../models/budget.dart';
 import 'add_expense_screen.dart';
 import 'budget_screen.dart';
 import 'expense_detail_screen.dart';
+import 'statistics_screen.dart';
+
+/// Short date, one line: "12 Nov 2026" in English; Urdu months
+/// are already short, so the store format is used as-is there.
+String shortDate(ExpenseStore store, DateTime date) {
+  if (store.locale.code == 'ur') return store.formatDate(date);
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return '${date.day} ${months[date.month - 1]} ${date.year}';
+}
 
 class BudgetDetailScreen extends StatelessWidget {
   final BudgetPeriod budget;
 
   const BudgetDetailScreen({super.key, required this.budget});
+
+  static Color _secondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? CashWiseTheme.darkSecondaryText
+          : CashWiseTheme.secondaryText;
 
   Future<void> _rename(BuildContext context, ExpenseStore store) async {
     final strings = store.strings;
@@ -57,21 +75,105 @@ class BudgetDetailScreen extends StatelessWidget {
     }
   }
 
-  Widget _summaryRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: CashWiseTheme.secondaryText),
+  /// Primary button (v7.2): fixed 48dp, label fully visible —
+  /// FittedBox scaleDown, one line, never ellipsised.
+  Widget _primaryButton({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    final enabled = onPressed != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: SizedBox(
+        height: 48,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: enabled
+                  ? const [Color(0xFF0C4444), Color(0xFF0F766E)]
+                  : const [Color(0xFF9CA3AF), Color(0xFF6B7280)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
           ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  /// One full-width option row: a tinted icon, a bold label
+  /// and a chevron.
+  Widget _actionRow({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required Color tint,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor:
+                    isDark ? CashWiseTheme.darkCard : tint,
+                foregroundColor: iconColor,
+                child: Icon(icon, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: _secondary(context),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -104,6 +206,14 @@ class BudgetDetailScreen extends StatelessWidget {
       ..sort((a, b) => b.value.compareTo(a.value));
     final maxCategory =
         sortedCategories.isEmpty ? 1.0 : sortedCategories.first.value;
+
+    void openDetails(int tab) {
+      Navigator.of(context).push(
+        slideRoute(
+          StatisticsScreen(initialTab: tab, budgetId: b.id),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -139,9 +249,12 @@ class BudgetDetailScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  strings.monthlyBudget,
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: CashWiseTheme.secondaryText,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -167,15 +280,30 @@ class BudgetDetailScreen extends StatelessWidget {
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            store.formatAmount(b.amount),
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          const SizedBox(height: 12),
+                          AmountRow(
+                            label: strings.budget,
+                            amount: store.formatAmount(b.amount),
                           ),
-                          const SizedBox(height: 8),
+                          AmountRow(
+                            label: strings.spentThisMonth,
+                            amount: store.formatAmount(spent),
+                          ),
+                          AmountRow(
+                            label: strings.remaining,
+                            amount: store.formatAmount(remaining),
+                          ),
+                          AmountRow(
+                            label: strings.dailyAverage,
+                            amount: store.formatAmount(
+                                store.budgetDailyAverage(b)),
+                          ),
+                          AmountRow(
+                            label: strings.projectedMonthEnd,
+                            amount: store.formatAmount(
+                                store.budgetProjectedMonthEnd(b)),
+                          ),
+                          const SizedBox(height: 10),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
@@ -193,32 +321,13 @@ class BudgetDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          _summaryRow(
-                            strings.spentThisMonth,
-                            store.formatAmount(spent),
-                          ),
-                          _summaryRow(
-                            strings.remaining,
-                            store.formatAmount(remaining),
-                          ),
-                          _summaryRow(
-                            strings.dailyAverage,
-                            store.formatAmount(
-                                store.budgetDailyAverage(b)),
-                          ),
-                          _summaryRow(
-                            strings.projectedMonthEnd,
-                            store.formatAmount(
-                                store.budgetProjectedMonthEnd(b)),
-                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (!isActive)
-                    GradientButton(
+                  if (!isActive) ...[
+                    _primaryButton(
                       label: strings.useThisBudget,
                       onPressed: () async {
                         await store.switchBudget(b.id);
@@ -232,40 +341,71 @@ class BudgetDetailScreen extends StatelessWidget {
                         );
                       },
                     ),
-                  if (!isActive) const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.edit, size: 18),
-                          label: Text(strings.editBudget),
-                          onPressed: () async {
-                            // The Set budget screen edits the
-                            // active budget, so make this one
-                            // active first.
-                            await store.switchBudget(b.id);
-                            if (!context.mounted) return;
-                            Navigator.of(context).push(
-                              slideRoute(const BudgetScreen()),
-                            );
-                          },
+                    const SizedBox(height: 16),
+                  ],
+                  // This budget's own options (v7.2) — every one
+                  // scoped to this budget, not the active one.
+                  _actionRow(
+                    context: context,
+                    label: strings.details,
+                    icon: Icons.bar_chart,
+                    tint: const Color(0xFFF5F3FF),
+                    iconColor: const Color(0xFF6D28D9),
+                    onTap: () => openDetails(0),
+                  ),
+                  _actionRow(
+                    context: context,
+                    label: strings.addExpense,
+                    icon: Icons.add,
+                    tint: const Color(0xFFECFDF5),
+                    iconColor: const Color(0xFF047857),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        slideRoute(
+                          AddExpenseScreen(budgetId: b.id),
+                        ),
+                      );
+                    },
+                  ),
+                  _actionRow(
+                    context: context,
+                    label: strings.aiPredictor,
+                    icon: Icons.psychology,
+                    tint: const Color(0xFFE3EDE8),
+                    iconColor: const Color(0xFF0F766E),
+                    onTap: () => openDetails(1),
+                  ),
+                  _actionRow(
+                    context: context,
+                    label: strings.summary,
+                    icon: Icons.summarize,
+                    tint: const Color(0xFFE0E7FF),
+                    iconColor: const Color(0xFF3730A3),
+                    onTap: () => openDetails(2),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.edit, size: 20),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          strings.editBudget,
+                          maxLines: 1,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.add, size: 18),
-                          label: Text(strings.addExpense),
-                          onPressed: () async {
-                            await store.switchBudget(b.id);
-                            if (!context.mounted) return;
-                            Navigator.of(context).push(
-                              slideRoute(const AddExpenseScreen()),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                      onPressed: () async {
+                        // The Set budget screen edits the
+                        // active budget, so make this one
+                        // active first.
+                        await store.switchBudget(b.id);
+                        if (!context.mounted) return;
+                        Navigator.of(context).push(
+                          slideRoute(const BudgetScreen()),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -279,8 +419,8 @@ class BudgetDetailScreen extends StatelessWidget {
                   if (sortedCategories.isEmpty)
                     Text(
                       strings.noExpenses,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
+                      style: TextStyle(
+                        color: _secondary(context),
                       ),
                     )
                   else
@@ -291,18 +431,14 @@ class BudgetDetailScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             for (final entry in sortedCategories) ...[
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(strings.categoryName(entry.key)),
-                                  Text(
+                              // Category name WITH its total (v7.2):
+                              // the amount sits in one straight
+                              // right-aligned column.
+                              AmountRow(
+                                label: strings.categoryName(entry.key),
+                                amount:
                                     store.formatAmount(entry.value),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                                bold: true,
                               ),
                               const SizedBox(height: 6),
                               ClipRRect(
@@ -340,8 +476,8 @@ class BudgetDetailScreen extends StatelessWidget {
                   if (expenses.isEmpty)
                     Text(
                       strings.noExpenses,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
+                      style: TextStyle(
+                        color: _secondary(context),
                       ),
                     )
                   else
@@ -364,7 +500,9 @@ class BudgetDetailScreen extends StatelessWidget {
                           ),
                           subtitle: Text(
                             '${strings.categoryName(e.category)} • '
-                            '${store.formatDate(e.date)}',
+                            '${shortDate(store, e.date)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           trailing: Text(
                             store.formatAmount(e.amountPkr),

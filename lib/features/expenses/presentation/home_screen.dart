@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'v7.1',
+                'v7.3',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
@@ -175,80 +175,122 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// One option button for the two-column grid: a tinted tile
-  /// with the icon above the label.
+  /// with the icon above the label. v7.2: theme-aware colours
+  /// (cream/dark-text in light mode, stone/soft-white in dark
+  /// mode — never light text on cream) and a label that shrinks
+  /// instead of truncating: FittedBox scaleDown, one line, no
+  /// ellipsis — "Set monthly..." is forbidden.
   Widget _subButton(
     ({String label, IconData icon, VoidCallback onTap}) a,
     Color iconColor,
   ) {
-    return Material(
-      color: CashWiseTheme.accentSoft,
-      borderRadius: BorderRadius.circular(12),
+    final border = CashWiseTheme.subButtonBorder(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: CashWiseTheme.subButtonBg(context),
+        borderRadius: BorderRadius.circular(12),
+        border: border == null ? null : Border.all(color: border),
+      ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: a.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(a.icon, size: 18, color: iconColor),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  a.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: a.onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(a.icon, size: 20, color: iconColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      a.label,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: CashWiseTheme.subButtonFg(context),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// One option button for the full-width rows: a tinted row
-  /// with the icon, the label and a chevron.
+  /// One option button for the full-width rows (v7.2): a tinted
+  /// row with the icon in a small tinted chip, the label and a
+  /// chevron at the end. Slightly larger corner radius (16dp)
+  /// than the old 12dp rows, theme-aware colours, and a label
+  /// that shrinks instead of truncating — one line, no ellipsis.
   Widget _subButtonRow(
     ({String label, IconData icon, VoidCallback onTap}) a,
     Color iconColor,
   ) {
+    final border = CashWiseTheme.subButtonBorder(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: CashWiseTheme.accentSoft,
-        borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: CashWiseTheme.subButtonBg(context),
+          borderRadius: BorderRadius.circular(16),
+          border: border == null ? null : Border.all(color: border),
+        ),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: a.onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
-            child: Row(
-              children: [
-                Icon(a.icon, size: 18, color: iconColor),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    a.label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: a.onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(a.icon, size: 20, color: iconColor),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        a.label,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: CashWiseTheme.subButtonFg(context),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: CashWiseTheme.secondaryText,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: CashWiseTheme.secondaryTextFor(context),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -279,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : CashWiseTheme.darkCard)
           : (hasDue
               ? const Color(0xFFFDECEC)
-              : const Color(0xFFFFFBEB)),
+              : const Color(0xFFF5F2EB)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -386,11 +428,11 @@ class _HomeScreenState extends State<HomeScreen> {
   /// preview of that category's own totals, a chevron — and below
   /// it, the category's options as REAL buttons (v7.1): each with
   /// its own icon and a tinted background, so they look like
-  /// buttons, not plain rows. The two categories do NOT share
-  /// one layout: Budget shows two-column tiles, Loan Ledger
-  /// shows full-width rows — the sequence is different on
-  /// purpose. The two categories stay separate — each card only
-  /// ever shows its own numbers and its own options.
+  /// buttons, not plain rows. v7.2: BOTH cards show full-width
+  /// rows — the Budget card's two-column grid left an empty
+  /// space under its 5th (odd) button. The two categories stay
+  /// separate — each card only ever shows its own numbers and
+  /// its own options.
   Widget _categoryCard({
     required String label,
     required IconData icon,
@@ -408,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
-          color: CashWiseTheme.gold.withValues(alpha: 0.45),
+          color: CashWiseTheme.tealMid.withValues(alpha: 0.45),
           width: 1,
         ),
       ),
@@ -447,17 +489,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           preview,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: CashWiseTheme.secondaryText,
+                            color:
+                                CashWiseTheme.secondaryTextFor(context),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: CashWiseTheme.secondaryText,
+                    color: CashWiseTheme.secondaryTextFor(context),
                   ),
                 ],
               ),
@@ -518,13 +561,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  /// Edit the account name from the avatar menu. In Urdu mode
-  /// there are two fields: the English name and the Urdu name —
-  /// so the user can type (or fix) the Urdu spelling directly
-  /// instead of relying on the transliteration.
+  /// Edit the account name from the avatar menu. v7.2: BOTH
+  /// fields are always shown — Name in English and Name in Urdu
+  /// — in BOTH language modes (the old Urdu-only gate hid the
+  /// Urdu field in English mode), and both are always saved;
+  /// the Urdu spelling is only stored when it is non-empty.
   Future<void> _showEditNameDialog() async {
     final store = context.read<ExpenseStore>();
-    final isUrdu = store.locale.code == 'ur';
     final enController = TextEditingController(text: store.userName);
     final urController = TextEditingController(
       text: store.userNameUrdu.isNotEmpty
@@ -536,7 +579,13 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) {
         final strings = store.strings;
         return AlertDialog(
-          title: Text(strings.editName),
+          title: Text(
+            strings.editName,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -546,15 +595,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     InputDecoration(labelText: strings.nameInEnglish),
                 textCapitalization: TextCapitalization.words,
               ),
-              if (isUrdu) ...[
-                const SizedBox(height: 12),
-                TextField(
-                  controller: urController,
-                  decoration:
-                      InputDecoration(labelText: strings.nameInUrdu),
-                  textDirection: TextDirection.rtl,
-                ),
-              ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: urController,
+                decoration:
+                    InputDecoration(labelText: strings.nameInUrdu),
+                textDirection: TextDirection.rtl,
+              ),
             ],
           ),
           actions: [
@@ -571,9 +618,10 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
     if (saved == true && enController.text.trim().isNotEmpty) {
+      final urdu = urController.text.trim();
       await store.updateUserName(
         enController.text.trim(),
-        nameUrdu: isUrdu ? urController.text.trim() : null,
+        nameUrdu: urdu.isNotEmpty ? urdu : null,
       );
     }
     enController.dispose();
@@ -670,7 +718,10 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context) => [
                 PopupMenuItem<String>(
                   enabled: false,
-                  height: 64,
+                  // v7.2: taller, and the name/email wrap onto a
+                  // second line instead of truncating — the same
+                  // permanent fix as the drawer header.
+                  height: 88,
                   child: Row(
                     children: [
                       CircleAvatar(
@@ -688,24 +739,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            store.displayName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              store.displayName,
+                              maxLines: 2,
+                              softWrap: true,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            store.userEmail,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: CashWiseTheme.secondaryText,
+                            Text(
+                              store.userEmail,
+                              maxLines: 2,
+                              softWrap: true,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: CashWiseTheme.secondaryTextFor(
+                                  context,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -749,7 +808,9 @@ class _HomeScreenState extends State<HomeScreen> {
           // Floating panel: a transparent drawer holding a
           // card with margins on every side, 26px corners and
           // a deep soft shadow — it never fills the screen.
-          width: 300,
+          // v7.2: 320dp wide so a long email has room to wrap
+          // instead of truncating (this regressed before).
+          width: 320,
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: Container(
@@ -769,7 +830,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(26),
-              child: AnimatedSlide(
+              // v7.2: a transparent Material INSIDE the decorated
+              // panel — without it the drawer's ListTiles throw
+              // ("background color or ink splashes may be
+              // invisible") because their nearest Material sits
+              // above the panel's background.
+              child: Material(
+                color: Colors.transparent,
+                child: AnimatedSlide(
                 offset: _drawerOpen
                     ? Offset.zero
                     : const Offset(-0.15, 0),
@@ -781,22 +849,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-              DrawerHeader(
-                // The drawer follows the selected theme: light
-                // header with dark text in light mode, navy
-                // gradient with white text in dark mode — so the
-                // name and email are always readable.
+              // v7.2: a plain Container, NOT DrawerHeader —
+              // DrawerHeader has a fixed 161px height, so a name
+              // or email wrapping onto a second line overflowed
+              // and got clipped. This header grows to fit: the
+              // full name and the full email always show, wrapped
+              // over two lines at most, never with an ellipsis.
+              Container(
                 decoration: store.isDarkMode
                     ? CashWiseTheme.headerGradientOf(context)
                     : const BoxDecoration(
                         color: Colors.white,
                         border: Border(
                           bottom: BorderSide(
-                            color: CashWiseTheme.gold,
+                            color: CashWiseTheme.tealMid,
                             width: 2,
                           ),
                         ),
                       ),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -832,8 +903,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 2),
                       Text(
                         store.displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        softWrap: true,
                         style: TextStyle(
                           color: store.isDarkMode
                               ? Colors.white
@@ -844,12 +915,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (store.userEmail.isNotEmpty) ...[
                       Text(
                         store.userEmail,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        softWrap: true,
                         style: TextStyle(
                           color: store.isDarkMode
                               ? Colors.white70
-                              : CashWiseTheme.secondaryText,
+                              : CashWiseTheme.secondaryTextFor(
+                                  context),
                         ),
                       ),
                     ],
@@ -1074,6 +1146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              ),
             ),
           ),
         ),
@@ -1086,7 +1159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Welcome hero — rich gradient + gold rule.
+                    // Welcome hero — rich gradient + teal rule.
                     Container(
                       // The welcome hero follows the theme too:
                       // navy in dark mode, soft light blue in
@@ -1095,14 +1168,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         gradient: LinearGradient(
                           colors: store.isDarkMode
                               ? const [
-                                  Color(0xFF292524),
-                                  Color(0xFF44403C),
-                                  Color(0xFF57534E),
+                                  Color(0xFF072E2E),
+                                  Color(0xFF0C4444),
+                                  Color(0xFF155E5E),
                                 ]
                               : const [
-                                  Color(0xFFFFFBEB),
-                                  Color(0xFFFEF3C7),
-                                  Color(0xFFFDE68A),
+                                  Color(0xFFF5F2EB),
+                                  Color(0xFFE3EDE8),
+                                  Color(0xFFCDE4DA),
                                 ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -1129,7 +1202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 shape: BoxShape.circle,
                                 color: (store.isDarkMode
                                         ? Colors.white
-                                        : CashWiseTheme.gold)
+                                        : CashWiseTheme.tealMid)
                                     .withValues(alpha: 0.12),
                               ),
                             ),
@@ -1142,7 +1215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               height: 90,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: CashWiseTheme.gold
+                                color: CashWiseTheme.tealMid
                                     .withValues(alpha: 0.15),
                               ),
                             ),
@@ -1179,7 +1252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             height: 2,
                             width: 48,
-                            color: CashWiseTheme.gold,
+                            color: CashWiseTheme.tealMid,
                           ),
                           const SizedBox(height: 12),
                                 Text(
@@ -1215,8 +1288,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     _categoryCard(
                       label: strings.budget,
                       icon: Icons.account_balance_wallet,
-                      tint: const Color(0xFFFEF3C7),
-                      iconColor: const Color(0xFF92400E),
+                      tint: const Color(0xFFE3EDE8),
+                      iconColor: const Color(0xFF0C4444),
                       preview: store.hasBudget
                           ? '${strings.budget}: '
                               '${store.formatAmount(store.monthlyBudgetPkr)}'
@@ -1228,8 +1301,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           slideRoute(const BudgetHomeScreen()),
                         );
                       },
-                      // Two-column tiles (v7.1).
-                      subActionsAsGrid: true,
+                      // Full-width rows (v7.2) — both cards use
+                      // rows now; the Budget grid left an empty
+                      // space under its 5th (odd) button.
+                      subActionsAsGrid: false,
                       subActions: [
                         (
                           label: strings.setMonthlyBudget,
@@ -1262,8 +1337,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     _categoryCard(
                       label: strings.udhar,
                       icon: Icons.handshake,
-                      tint: const Color(0xFFFFFBEB),
-                      iconColor: const Color(0xFFB45309),
+                      tint: const Color(0xFFF5F2EB),
+                      iconColor: const Color(0xFF0F766E),
                       preview:
                           '${strings.moneyLent}: '
                           '${store.formatAmount(store.totalLentOutstanding)}'
@@ -1313,8 +1388,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       strings.aboutText,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
+                      style: TextStyle(
+                        color: CashWiseTheme.secondaryTextFor(context),
                       ),
                     ),
                   ],
