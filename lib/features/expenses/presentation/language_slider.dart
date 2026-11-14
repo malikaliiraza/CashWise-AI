@@ -1,11 +1,18 @@
-// CashWise AI — language slider (v5.4).
+// CashWise AI — language slider (v7.2).
 //
 // A small, professional sliding switch between English and اردو:
 // one pill that glides from one side to the other when tapped.
 // The labels are styled — English in letterspaced type, اردو in
-// Nastaliq — and the pill is theme-aware: gold in light mode,
+// Nastaliq — and the pill is theme-aware: teal in light mode,
 // navy in dark mode (no blue in light mode). Compact (32px),
 // normal weight. It lives in the AppBar.
+//
+// v7.2: the track AND the inactive label are theme-aware — the
+// old fixed cream track with a slate inactive label left اردو
+// unreadable (white-on-light when the pill sat on the other
+// side). Both options are now clearly readable in light and
+// dark mode: active = white on the teal pill, inactive = the
+// theme's main text colour on the theme's track.
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +28,11 @@ class LanguageSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUrdu = store.locale.code == 'ur';
+    final isDark = store.isDarkMode;
+    // Inactive label: the theme's main text colour — dark text
+    // on the cream track in light mode, soft white on the stone
+    // track in dark mode. Never white, never slate-on-dark.
+    final inactiveColor = CashWiseTheme.subButtonFg(context);
 
     Widget option(String code, Widget label, bool active) {
       return Expanded(
@@ -37,7 +49,7 @@ class LanguageSlider extends StatelessWidget {
     }
 
     TextStyle labelStyle(bool active) => TextStyle(
-          color: active ? Colors.white : CashWiseTheme.secondaryText,
+          color: active ? Colors.white : inactiveColor,
           fontSize: 12,
         );
 
@@ -56,7 +68,11 @@ class LanguageSlider extends StatelessWidget {
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        color: CashWiseTheme.accentSoft,
+        // Track follows the theme, like the theme slider:
+        // pearl tint in light mode, teal-dark in dark mode.
+        color: isDark
+            ? const Color(0xFF155E5E)
+            : CashWiseTheme.accentSoft,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Stack(
@@ -72,14 +88,14 @@ class LanguageSlider extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFD97706), Color(0xFFC9A227)],
+                    colors: [Color(0xFF0C4444), Color(0xFF0F766E)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x1FB45309),
+                      color: Color(0x1F0C4444),
                       blurRadius: 6,
                       offset: Offset(0, 2),
                     ),
