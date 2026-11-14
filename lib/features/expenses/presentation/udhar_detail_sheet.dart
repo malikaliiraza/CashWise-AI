@@ -16,6 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/amount_row.dart';
 import '../../../core/confirm_dialog.dart';
 import '../../../core/delete_icon_button.dart';
 import '../../../core/gradient_button.dart';
@@ -90,7 +91,21 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
         .fold(0.0, (s, x) => s + x.amount);
     final remainingAfter =
         (entry.amountPkr - paidAfter).clamp(0.0, double.infinity);
-    Widget detailRow(String label, String value) {
+    Widget detailRow(String label, String value, {bool isAmount = false}) {
+      // Amount rows align in a right-hand column; other rows
+      // stay one clean line.
+      if (isAmount) {
+        return AmountRow(
+          label: label,
+          amount: value,
+          bold: true,
+          labelStyle: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? CashWiseTheme.darkSecondaryText
+                : CashWiseTheme.secondaryText,
+          ),
+        );
+      }
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(
@@ -98,13 +113,17 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
           children: [
             Text(
               label,
-              style: const TextStyle(color: CashWiseTheme.secondaryText),
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? CashWiseTheme.darkSecondaryText
+                    : CashWiseTheme.secondaryText,
+              ),
             ),
             Flexible(
               child: Text(
                 value,
                 textAlign: TextAlign.end,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -129,10 +148,12 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
             detailRow(
               strings.totalAmount,
               store.formatAmount(entry.amountPkr),
+              isAmount: true,
             ),
             detailRow(
               strings.thisPayment,
               store.formatAmount(p.amount),
+              isAmount: true,
             ),
             detailRow(
               strings.date,
@@ -146,10 +167,12 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
             detailRow(
               strings.paidSoFar,
               store.formatAmount(paidAfter),
+              isAmount: true,
             ),
             detailRow(
               strings.remainingAfterPayment,
               store.formatAmount(remainingAfter),
+              isAmount: true,
             ),
           ],
         ),
@@ -173,6 +196,21 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
       orElse: () => widget.entry,
     );
     final status = entry.dueStatus;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark
+        ? CashWiseTheme.darkSecondaryText
+        : CashWiseTheme.secondaryText;
+
+    /// Short date, one clean line: "12 Nov 2026".
+    String shortDate(DateTime date) {
+      if (store.locale.code == 'ur') return store.formatDate(date);
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+      return '${date.day} ${months[date.month - 1]} ${date.year}';
+    }
+
     final statusText = status == DueStatus.overdue
         ? strings.overdue
         : status == DueStatus.dueToday
@@ -183,7 +221,7 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                     ? strings.dueInDays(entry.daysUntilDue ?? 0)
                     : entry.dueDate == null
                         ? strings.noDueDate
-                        : store.formatDate(entry.dueDate!);
+                        : shortDate(entry.dueDate!);
 
     Widget row(String label, String value, {Color? valueColor}) {
       return Padding(
@@ -193,13 +231,13 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
           children: [
             Text(
               label,
-              style: const TextStyle(color: CashWiseTheme.secondaryText),
+              style: TextStyle(color: secondary),
             ),
             Flexible(
               child: Text(
                 value,
                 textAlign: TextAlign.end,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -208,6 +246,27 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
               ),
             ),
           ],
+        ),
+      );
+    }
+
+    /// One 40dp icon button with a 22dp icon.
+    Widget sheetIconButton({
+      required IconData icon,
+      required String tooltip,
+      required VoidCallback? onPressed,
+      Color? color,
+    }) {
+      return SizedBox(
+        width: 40,
+        height: 40,
+        child: IconButton(
+          icon: Icon(icon, size: 22),
+          tooltip: tooltip,
+          color: color,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          onPressed: onPressed,
         ),
       );
     }
@@ -234,23 +293,36 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
             const SizedBox(height: 4),
             Text(
               entry.isLent ? strings.moneyLent : strings.moneyBorrowed,
-              style: const TextStyle(color: CashWiseTheme.secondaryText),
+              style: TextStyle(color: secondary),
             ),
             const SizedBox(height: 12),
-            row(strings.totalAmount, store.formatAmount(entry.amountPkr)),
-            row(strings.paidSoFar, store.formatAmount(entry.paidSoFar)),
-            row(
-              strings.remainingAmount,
-              store.formatAmount(entry.remaining),
-              valueColor: entry.remaining > 0
-                  ? CashWiseTheme.danger
-                  : CashWiseTheme.success,
+            AmountRow(
+              label: strings.totalAmount,
+              amount: store.formatAmount(entry.amountPkr),
+              bold: true,
+              labelStyle: TextStyle(color: secondary),
+            ),
+            AmountRow(
+              label: strings.paidSoFar,
+              amount: store.formatAmount(entry.paidSoFar),
+              labelStyle: TextStyle(color: secondary),
+            ),
+            AmountRow(
+              label: strings.remainingAmount,
+              amount: store.formatAmount(entry.remaining),
+              bold: true,
+              labelStyle: TextStyle(color: secondary),
+              amountStyle: TextStyle(
+                color: entry.remaining > 0
+                    ? CashWiseTheme.danger
+                    : CashWiseTheme.success,
+              ),
             ),
             row(
               strings.dueDate,
               entry.dueDate == null
                   ? strings.noDueDate
-                  : store.formatDate(entry.dueDate!),
+                  : shortDate(entry.dueDate!),
             ),
             row(
               strings.dueTime,
@@ -272,12 +344,15 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                       entry.settled
                           ? Icons.lock
                           : Icons.calendar_today,
-                      size: 18,
+                      size: 20,
                     ),
-                    label: Text(
-                      strings.setDueDate,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        strings.setDueDate,
+                        maxLines: 1,
+                        softWrap: false,
+                      ),
                     ),
                   ),
                 ),
@@ -291,12 +366,15 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                       entry.settled
                           ? Icons.lock
                           : Icons.access_time,
-                      size: 18,
+                      size: 20,
                     ),
-                    label: Text(
-                      strings.setDueTime,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        strings.setDueTime,
+                        maxLines: 1,
+                        softWrap: false,
+                      ),
                     ),
                   ),
                 ),
@@ -329,8 +407,8 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   strings.noPaymentsYet,
-                  style: const TextStyle(
-                    color: CashWiseTheme.secondaryText,
+                  style: TextStyle(
+                    color: secondary,
                   ),
                 ),
               )
@@ -341,27 +419,42 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(store.formatAmount(p.amount)),
-                        Text(
-                          '${store.formatDate(p.date)}'
-                          ' • ${store.weekdayName(p.date)}'
-                          '${p.timeMinutes == null ? '' : ' • ${store.formatMinutes(p.timeMinutes!)}'}',
-                          style: const TextStyle(
-                            color: CashWiseTheme.secondaryText,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                store.formatAmount(p.amount),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              // One clean line: short date,
+                              // weekday, time.
+                              Text(
+                                '${shortDate(p.date)}'
+                                ' • ${store.weekdayName(p.date)}'
+                                '${p.timeMinutes == null ? '' : ' • ${store.formatMinutes(p.timeMinutes!)}'}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: secondary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         // A small Details button for this one
                         // payment (v7.0): the full story of
                         // when and how much was paid.
-                        IconButton(
-                          icon: const Icon(
-                            Icons.info_outline,
-                            size: 20,
-                            color: CashWiseTheme.lightAccent,
-                          ),
+                        sheetIconButton(
+                          icon: Icons.info_outline,
                           tooltip: strings.details,
+                          color: CashWiseTheme.lightAccent,
                           onPressed: () => _showPaymentDetails(
                             context,
                             entry,
@@ -371,11 +464,8 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                         // Set reminder for this one payment
                         // (v7.1): prefilled with the person
                         // and this payment's amount.
-                        IconButton(
-                          icon: const Icon(
-                            Icons.add_alert,
-                            size: 20,
-                          ),
+                        sheetIconButton(
+                          icon: Icons.add_alert,
                           tooltip: strings.setReminder,
                           color: CashWiseTheme.accentFor(context),
                           onPressed: () {
@@ -391,25 +481,30 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                             );
                           },
                         ),
-                        DeleteIconButton(
-                          tooltip: strings.delete,
-                          // Locked while settled.
-                          onPressed: entry.settled
-                              ? null
-                              : () async {
-                                  final confirmed =
-                                      await confirmDelete(
-                                    context,
-                                    strings,
-                                    store.formatAmount(p.amount),
-                                  );
-                                  if (confirmed) {
-                                    await context
-                                        .read<ExpenseStore>()
-                                        .removeUdharPayment(
-                                            entry.id, e.key);
-                                  }
-                                },
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: DeleteIconButton(
+                            iconSize: 22,
+                            tooltip: strings.delete,
+                            // Locked while settled.
+                            onPressed: entry.settled
+                                ? null
+                                : () async {
+                                    final storeRead =
+                                        context.read<ExpenseStore>();
+                                    final confirmed =
+                                        await confirmDelete(
+                                      context,
+                                      strings,
+                                      store.formatAmount(p.amount),
+                                    );
+                                    if (confirmed) {
+                                      await storeRead.removeUdharPayment(
+                                          entry.id, e.key);
+                                    }
+                                  },
+                          ),
                         ),
                       ],
                     ),
@@ -433,8 +528,15 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                   ),
                 );
               },
-              icon: const Icon(Icons.add_alert),
-              label: Text(strings.setReminder),
+              icon: const Icon(Icons.add_alert, size: 20),
+              label: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  strings.setReminder,
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             // Details only (v6.0): amounts are added from the
@@ -462,28 +564,41 @@ class _UdharDetailSheetState extends State<UdharDetailSheet> {
                                 .toggleUdharSettled(entry.id);
                             Navigator.of(context).pop();
                           },
-                          child: Text(strings.markSettled),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              strings.markSettled,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                          ),
                         ),
                 ),
                 const SizedBox(width: 8),
-                DeleteIconButton(
-                  tooltip: strings.delete,
-                  onPressed: entry.settled
-                      ? null
-                      : () async {
-                          final confirmed = await confirmDelete(
-                            context,
-                            strings,
-                            store.displayPerson(entry.person),
-                          );
-                          if (confirmed) {
-                            await context
-                                .read<ExpenseStore>()
-                                .removeUdhar(entry.id);
-                            if (!mounted) return;
-                            Navigator.of(context).pop();
-                          }
-                        },
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: DeleteIconButton(
+                    iconSize: 22,
+                    tooltip: strings.delete,
+                    onPressed: entry.settled
+                        ? null
+                        : () async {
+                            final storeRead =
+                                context.read<ExpenseStore>();
+                            final navigator = Navigator.of(context);
+                            final confirmed = await confirmDelete(
+                              context,
+                              strings,
+                              store.displayPerson(entry.person),
+                            );
+                            if (confirmed) {
+                              await storeRead.removeUdhar(entry.id);
+                              if (!mounted) return;
+                              navigator.pop();
+                            }
+                          },
+                  ),
                 ),
               ],
             ),

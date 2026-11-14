@@ -1,4 +1,4 @@
-// CashWise AI — Loan Ledger summary (v5.2).
+// Hisaab Kitaab — Loan Ledger summary (v7.2).
 //
 // Totals plus a per-person breakdown of pending amounts: who
 // owes you what, and whom you owe what. Settled entries are
@@ -7,12 +7,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/amount_row.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import '../models/udhar_entry.dart';
+import 'budget_detail_screen.dart' show shortDate;
 
 class LoanLedgerSummaryScreen extends StatelessWidget {
   const LoanLedgerSummaryScreen({super.key});
+
+  static Color _secondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? CashWiseTheme.darkSecondaryText
+          : CashWiseTheme.secondaryText;
 
   @override
   Widget build(BuildContext context) {
@@ -53,25 +60,6 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
     final lentPeople = lentByPerson.keys.toList()..sort();
     final borrowedPeople = borrowedByPerson.keys.toList()..sort();
 
-    Widget summaryRow(String label, String value) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: CashWiseTheme.secondaryText),
-            ),
-            Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Container(
@@ -103,17 +91,21 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          summaryRow(
-                            strings.moneyLent,
-                            store.formatAmount(
+                          AmountRow(
+                            label: strings.moneyLent,
+                            amount: store.formatAmount(
                                 store.totalLentOutstanding),
                           ),
-                          summaryRow(
-                            strings.moneyBorrowed,
-                            store.formatAmount(
+                          AmountRow(
+                            label: strings.moneyBorrowed,
+                            amount: store.formatAmount(
                                 store.totalBorrowedOutstanding),
                           ),
-                          summaryRow(strings.netBalance, netText),
+                          AmountRow(
+                            label: strings.netBalance,
+                            amount: netText,
+                            bold: true,
+                          ),
                         ],
                       ),
                     ),
@@ -146,7 +138,9 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
   }
 
   /// One side of the ledger: every person with their total, paid
-  /// so far, remaining, and next due date/time.
+  /// so far, remaining, and next due date/time — each detail as
+  /// its own AmountRow, so all amounts sit in one straight
+  /// right-aligned column and "Next due" never breaks mid-phrase.
   Widget _personSection(
     BuildContext context,
     ExpenseStore store,
@@ -158,6 +152,7 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
         sideTotals,
   ) {
     final strings = store.strings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -177,9 +172,7 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
               child: Text(
                 strings.noUdharEntries,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: CashWiseTheme.secondaryText,
-                ),
+                style: TextStyle(color: _secondary(context)),
               ),
             ),
           )
@@ -188,35 +181,66 @@ class LoanLedgerSummaryScreen extends StatelessWidget {
             final totals = sideTotals(byPerson[person]!);
             final remaining = totals.total - totals.paid;
             final nextDue = totals.nextDue;
-            final lines = <String>[
-              '${strings.totalAmount}: '
-                  '${store.formatAmount(totals.total)}',
-              '${strings.paidSoFar}: '
-                  '${store.formatAmount(totals.paid)}',
-              '${strings.remainingAmount}: '
-                  '${store.formatAmount(remaining)}',
-              nextDue == null
-                  ? strings.noDueDate
-                  : '${strings.nextDue}: '
-                      '${store.formatDate(nextDue)}',
-            ];
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: CashWiseTheme.accentSoft,
-                  foregroundColor:
-                      CashWiseTheme.accentFor(context),
-                  child: Text(
-                    store.displayPerson(person).isNotEmpty
-                        ? store.displayPerson(person)[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: isDark
+                          ? CashWiseTheme.darkCard
+                          : CashWiseTheme.accentSoft,
+                      foregroundColor:
+                          CashWiseTheme.accentFor(context),
+                      child: Text(
+                        store.displayPerson(person).isNotEmpty
+                            ? store.displayPerson(person)[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            store.displayPerson(person),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          AmountRow(
+                            label: strings.totalAmount,
+                            amount:
+                                store.formatAmount(totals.total),
+                          ),
+                          AmountRow(
+                            label: strings.paidSoFar,
+                            amount: store.formatAmount(totals.paid),
+                          ),
+                          AmountRow(
+                            label: strings.remainingAmount,
+                            amount: store.formatAmount(remaining),
+                          ),
+                          AmountRow(
+                            label: strings.nextDue,
+                            amount: nextDue == null
+                                ? strings.noDueDate
+                                : shortDate(store, nextDue),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                title: Text(store.displayPerson(person)),
-                subtitle: Text(lines.join(' • ')),
-                isThreeLine: true,
               ),
             );
           }),

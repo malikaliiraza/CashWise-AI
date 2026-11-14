@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/amount_row.dart';
 import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
@@ -18,19 +19,26 @@ import 'udhar_screen.dart';
 class LoanLedgerHomeScreen extends StatelessWidget {
   const LoanLedgerHomeScreen({super.key});
 
-  /// A big card for one side of the ledger (v7.1): icon, label,
-  /// the pending amount and how many people owe it — the two
-  /// sides sit side by side, so the ledger opens with its own
-  /// numbers, not a grid of identical buttons.
+  /// A big card for one side of the ledger (v7.1, v7.2): icon,
+  /// label, the pending amount and how many people owe it —
+  /// plus its OWN Add button, opening that side's form only.
+  /// The two sides are separate cards, never mixed.
   Widget _bigCard({
+    required BuildContext context,
     required String label,
     required IconData icon,
     required Color tint,
     required Color iconColor,
     required String amount,
     required String count,
+    required String addLabel,
     required VoidCallback onTap,
+    required VoidCallback onAdd,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark
+        ? CashWiseTheme.darkSecondaryText
+        : CashWiseTheme.secondaryText;
     return Expanded(
       child: Card(
         margin: EdgeInsets.zero,
@@ -40,7 +48,7 @@ class LoanLedgerHomeScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 CircleAvatar(
                   backgroundColor: tint,
@@ -50,25 +58,48 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  amount,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    amount,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   count,
-                  style: const TextStyle(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
                     fontSize: 12,
-                    color: CashWiseTheme.secondaryText,
+                    color: secondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: onAdd,
+                  icon: const Icon(Icons.add, size: 20),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      addLabel,
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
                   ),
                 ),
               ],
@@ -83,12 +114,14 @@ class LoanLedgerHomeScreen extends StatelessWidget {
   /// in spirit but used here only for Details and Summary —
   /// the two sides above already carry the ledger's main actions.
   Widget _actionRow({
+    required BuildContext context,
     required String label,
     required IconData icon,
     required Color tint,
     required Color iconColor,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: InkWell(
@@ -116,9 +149,11 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: CashWiseTheme.secondaryText,
+                color: isDark
+                    ? CashWiseTheme.darkSecondaryText
+                    : CashWiseTheme.secondaryText,
               ),
             ],
           ),
@@ -128,28 +163,14 @@ class LoanLedgerHomeScreen extends StatelessWidget {
   }
 
   Widget _summaryRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: CashWiseTheme.secondaryText),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
+    return AmountRow(label: label, amount: value, bold: true);
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<ExpenseStore>();
     final strings = store.strings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final net = store.totalLentOutstanding -
         store.totalBorrowedOutstanding;
     final netText =
@@ -214,14 +235,22 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _bigCard(
+                        context: context,
                         label: strings.moneyLent,
                         icon: Icons.call_received,
-                        tint: const Color(0xFFECFDF5),
-                        iconColor: const Color(0xFF047857),
+                        tint: Theme.of(context).brightness ==
+                                Brightness.dark
+                            ? const Color(0xFF14532D)
+                            : const Color(0xFFECFDF5),
+                        iconColor: Theme.of(context).brightness ==
+                                Brightness.dark
+                            ? const Color(0xFF86EFAC)
+                            : const Color(0xFF047857),
                         amount: store.formatAmount(
                             store.totalLentOutstanding),
                         count:
                             '${store.udharEntries.where((e) => e.isLent && !e.settled).length} ${strings.people}',
+                        addLabel: strings.addReceivable,
                         onTap: () {
                           Navigator.of(context).push(
                             slideRoute(
@@ -229,21 +258,43 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                             ),
                           );
                         },
+                        onAdd: () {
+                          Navigator.of(context).push(
+                            slideRoute(
+                              const UdharScreen(initialIsLent: true),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 12),
                       _bigCard(
+                        context: context,
                         label: strings.moneyBorrowed,
                         icon: Icons.call_made,
-                        tint: const Color(0xFFFFFBEB),
-                        iconColor: const Color(0xFFB45309),
+                        tint: Theme.of(context).brightness ==
+                                Brightness.dark
+                            ? const Color(0xFF451A03)
+                            : const Color(0xFFF5F2EB),
+                        iconColor: Theme.of(context).brightness ==
+                                Brightness.dark
+                            ? const Color(0xFFFCD34D)
+                            : const Color(0xFFB45309),
                         amount: store.formatAmount(
                             store.totalBorrowedOutstanding),
                         count:
                             '${store.udharEntries.where((e) => !e.isLent && !e.settled).length} ${strings.people}',
+                        addLabel: strings.addPayable,
                         onTap: () {
                           Navigator.of(context).push(
                             slideRoute(
                               const UdharListScreen(isLent: false),
+                            ),
+                          );
+                        },
+                        onAdd: () {
+                          Navigator.of(context).push(
+                            slideRoute(
+                              const UdharScreen(initialIsLent: false),
                             ),
                           );
                         },
@@ -252,10 +303,15 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _actionRow(
+                    context: context,
                     label: strings.details,
                     icon: Icons.bar_chart,
-                    tint: const Color(0xFFF5F3FF),
-                    iconColor: const Color(0xFF6D28D9),
+                    tint: isDark
+                        ? const Color(0xFF2E1065)
+                        : const Color(0xFFF5F3FF),
+                    iconColor: isDark
+                        ? const Color(0xFFC4B5FD)
+                        : const Color(0xFF6D28D9),
                     onTap: () {
                       Navigator.of(context).push(
                         slideRoute(const UdharScreen()),
@@ -263,10 +319,15 @@ class LoanLedgerHomeScreen extends StatelessWidget {
                     },
                   ),
                   _actionRow(
+                    context: context,
                     label: strings.summary,
                     icon: Icons.summarize,
-                    tint: const Color(0xFFE0E7FF),
-                    iconColor: const Color(0xFF3730A3),
+                    tint: isDark
+                        ? const Color(0xFF1E1B4B)
+                        : const Color(0xFFE0E7FF),
+                    iconColor: isDark
+                        ? const Color(0xFFA5B4FC)
+                        : const Color(0xFF3730A3),
                     onTap: () {
                       Navigator.of(context).push(
                         slideRoute(

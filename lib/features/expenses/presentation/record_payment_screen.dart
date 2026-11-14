@@ -11,11 +11,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/gradient_button.dart';
+import '../../../core/amount_row.dart';
 import '../../../core/styled_date_picker.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import '../models/udhar_entry.dart';
+import 'budget_detail_screen.dart' show shortDate;
 
 class RecordPaymentScreen extends StatefulWidget {
   final UdharEntry entry;
@@ -69,24 +70,19 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
       orElse: () => widget.entry,
     );
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark
+        ? CashWiseTheme.darkSecondaryText
+        : CashWiseTheme.secondaryText;
     Widget row(String label, String value, {Color? valueColor}) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: CashWiseTheme.secondaryText),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: valueColor,
-              ),
-            ),
-          ],
+      // AmountRow (v7.2): label wraps, amount stays in its own
+      // right-aligned column.
+      return AmountRow(
+        label: label,
+        amount: value,
+        amountStyle: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: valueColor,
         ),
       );
     }
@@ -126,9 +122,7 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                             entry.isLent
                                 ? strings.moneyLent
                                 : strings.moneyBorrowed,
-                            style: const TextStyle(
-                              color: CashWiseTheme.secondaryText,
-                            ),
+                            style: TextStyle(color: secondary),
                           ),
                           const SizedBox(height: 12),
                           row(
@@ -166,41 +160,57 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showStyledDatePicker(
-                              context: context,
-                              initialDate: _date,
-                            );
-                            if (picked != null) {
-                              setState(() => _date = picked);
-                            }
-                          },
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            '${strings.date}: '
-                            '${store.formatDate(_date)} '
-                            '(${store.weekdayName(_date)})',
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final picked = await showStyledDatePicker(
+                                context: context,
+                                initialDate: _date,
+                              );
+                              if (picked != null) {
+                                setState(() => _date = picked);
+                              }
+                            },
+                            icon:
+                                const Icon(Icons.calendar_today, size: 20),
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '${strings.date}: '
+                                '${shortDate(store, _date)} '
+                                '(${store.weekdayName(_date)})',
+                                maxLines: 1,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showStyledTimePicker(
-                              context: context,
-                              initialTime: _time ?? TimeOfDay.now(),
-                            );
-                            if (picked != null) {
-                              setState(() => _time = picked);
-                            }
-                          },
-                          icon: const Icon(Icons.access_time),
-                          label: Text(
-                            _time == null
-                                ? strings.paymentTime
-                                : store.formatTimeOfDay(_time!),
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final picked = await showStyledTimePicker(
+                                context: context,
+                                initialTime: _time ?? TimeOfDay.now(),
+                              );
+                              if (picked != null) {
+                                setState(() => _time = picked);
+                              }
+                            },
+                            icon:
+                                const Icon(Icons.access_time, size: 20),
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                _time == null
+                                    ? strings.paymentTime
+                                    : store.formatTimeOfDay(_time!),
+                                maxLines: 1,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -217,7 +227,7 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  GradientButton(
+                  _PrimaryButton(
                     label: strings.addPayment,
                     onPressed: entry.settled ? null : _save,
                   ),
@@ -235,9 +245,7 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         strings.noPaymentsYet,
-                        style: const TextStyle(
-                          color: CashWiseTheme.secondaryText,
-                        ),
+                        style: TextStyle(color: secondary),
                       ),
                     )
                   else
@@ -251,16 +259,18 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                         child: ListTile(
                           title: Text(store.formatAmount(p.amount)),
                           subtitle: Text(
-                            '${store.formatDate(p.date)}'
+                            '${shortDate(store, p.date)}'
                             ' • ${store.weekdayName(p.date)}'
                             '${time == null ? '' : ' • $time'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           trailing: IconButton(
                             icon: Icon(
                               Icons.delete_outline,
                               size: 20,
                               color: entry.settled
-                                  ? CashWiseTheme.secondaryText
+                                  ? secondary
                                   : CashWiseTheme.danger,
                             ),
                             tooltip: strings.delete,
@@ -277,6 +287,63 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
                     );
                   }),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Primary button (v7.2): fixed 48dp, label fully visible —
+/// FittedBox scaleDown, one line, never ellipsised.
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _PrimaryButton({required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: SizedBox(
+        height: 48,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: enabled
+                  ? const [Color(0xFF0C4444), Color(0xFF0F766E)]
+                  : const [Color(0xFF9CA3AF), Color(0xFF6B7280)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
