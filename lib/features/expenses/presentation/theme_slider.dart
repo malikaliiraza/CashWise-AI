@@ -61,10 +61,10 @@ class ThemeSlider extends StatelessWidget {
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        // Track follows the selected theme: warm cream in light
-        // mode, warm stone in dark mode.
+        // Track follows the selected theme: pearl tint in light
+        // mode, teal-dark in dark mode.
         color: isDark
-            ? const Color(0xFF44403C)
+            ? const Color(0xFF155E5E)
             : CashWiseTheme.accentSoft,
         borderRadius: BorderRadius.circular(16),
       ),
@@ -80,16 +80,16 @@ class ThemeSlider extends StatelessWidget {
               heightFactor: 1,
               child: Container(
                 decoration: BoxDecoration(
-                  // Gold pill in both themes.
+                  // Teal pill in both themes.
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFD97706), Color(0xFFC9A227)],
+                    colors: [Color(0xFF0C4444), Color(0xFF0F766E)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x1FB45309),
+                      color: Color(0x1F0C4444),
                       blurRadius: 6,
                       offset: Offset(0, 2),
                     ),

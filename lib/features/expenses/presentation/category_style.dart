@@ -28,7 +28,7 @@ Color categoryColor(String category) {
     case 'Food':
       return const Color(0xFFEA580C);
     case 'Transport':
-      return const Color(0xFF2563EB);
+      return const Color(0xFF0F766E);
     case 'Bills':
       return const Color(0xFFF59E0B);
     case 'Shopping':
