@@ -165,8 +165,9 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                         Text(
                           '${strings.categoryName(expense.category)} • '
                           '${store.formatDate(date)}',
-                          style: const TextStyle(
-                            color: CashWiseTheme.secondaryText,
+                          style: TextStyle(
+                            color:
+                                CashWiseTheme.secondaryTextFor(context),
                           ),
                         ),
                       ],
@@ -260,18 +261,22 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     ),
                   ),
                 ] else ...[
+                  // v7.2: balanced row — the standard 48dp
+                  // GradientButton (normal 16px bold label, never
+                  // oversized) beside a proper-size bin: 22dp
+                  // icon on a 40dp tap target.
                   Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton.icon(
+                        child: GradientButton(
+                          label: strings.editExpense,
                           onPressed: () =>
                               setState(() => _editing = true),
-                          icon: const Icon(Icons.edit),
-                          label: Text(strings.editExpense),
                         ),
                       ),
                       const SizedBox(width: 8),
                       DeleteIconButton(
+                        iconSize: 22,
                         tooltip: strings.delete,
                         onPressed: _confirmDelete,
                       ),

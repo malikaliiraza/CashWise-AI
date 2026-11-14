@@ -1,18 +1,14 @@
-// CashWise AI — category spending chart.
+// Hisaab Kitaab — category spending chart (v7.2).
 //
 // Pie chart of spending by category (fl_chart) + legend, in the current
 // locale. Requires fl_chart (see pubspec.yaml).
 //
 // API used (PieChart / PieChartData / PieChartSectionData) exists in
 // both fl_chart 0.69 and 1.x.
-//
-// Not yet run/tested on a device — run `flutter pub get`,
-// `flutter analyze`, then `flutter run -d chrome` on the PC.
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/localization.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 
@@ -32,8 +28,9 @@ const Map<String, Color> categoryChartColors = {
 
 /// Pie chart of spending by category + legend, in the current locale.
 ///
-/// - Totals come from [ExpenseStore.expenses]; categories are grouped by
-///   their stored English key and displayed with [AppLocale.categoryName].
+/// - Totals come from [ExpenseStore.expenses], or from
+///   [ExpenseStore.expensesForBudget] when [budgetId] is given, so a
+///   budget's own Details page charts only that budget.
 /// - Amounts use [ExpenseStore.formatAmount], so the currency follows the
 ///   selected language (no hardcoded "Rs." anywhere).
 /// - Returns nothing visible when there are no expenses, so the home
@@ -41,11 +38,18 @@ const Map<String, Color> categoryChartColors = {
 class CategoryChartCard extends StatelessWidget {
   final ExpenseStore store;
 
-  const CategoryChartCard({super.key, required this.store});
+  /// Optional: chart only this budget's expenses (v7.2). Null =
+  /// the active budget, as before.
+  final String? budgetId;
+
+  const CategoryChartCard({super.key, required this.store, this.budgetId});
 
   Map<String, double> _totalsByCategory() {
     final totals = <String, double>{};
-    for (final expense in store.expenses) {
+    final list = budgetId == null
+        ? store.expenses
+        : store.expensesForBudget(budgetId!);
+    for (final expense in list) {
       totals[expense.category] =
           (totals[expense.category] ?? 0) + expense.amountPkr;
     }
@@ -59,10 +63,18 @@ class CategoryChartCard extends StatelessWidget {
     final totals = _totalsByCategory();
     if (totals.isEmpty) return const SizedBox.shrink();
 
-    final totalSpent = store.totalSpent;
+    final list = budgetId == null
+        ? store.expenses
+        : store.expensesForBudget(budgetId!);
+    final totalSpent =
+        list.fold(0.0, (sum, e) => sum + e.amountPkr);
     // Biggest slice first, so the legend reads in spending order.
     final entries = totals.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+    final secondary =
+        Theme.of(context).brightness == Brightness.dark
+            ? CashWiseTheme.darkSecondaryText
+            : CashWiseTheme.secondaryText;
 
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -107,6 +119,9 @@ class CategoryChartCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+            // Legend (v7.2): every category shows its total
+            // amount next to its name — name flexes, amount is
+            // a fixed right-aligned column, so nothing overlaps.
             ...entries.map((entry) {
               final fraction =
                   totalSpent <= 0 ? 0 : entry.value / totalSpent;
@@ -125,10 +140,18 @@ class CategoryChartCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(strings.categoryName(entry.key)),
+                      child: Text(
+                        strings.categoryName(entry.key),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       store.formatAmount(entry.value),
+                      maxLines: 1,
+                      softWrap: false,
+                      textAlign: TextAlign.right,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 8),
@@ -137,9 +160,7 @@ class CategoryChartCard extends StatelessWidget {
                       child: Text(
                         '${(fraction * 100).round()}%',
                         textAlign: TextAlign.end,
-                        style: const TextStyle(
-                          color: CashWiseTheme.secondaryText,
-                        ),
+                        style: TextStyle(color: secondary),
                       ),
                     ),
                   ],

@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/amount_row.dart';
 import '../../../core/delete_icon_button.dart';
 import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
@@ -76,39 +77,110 @@ class _RemindersScreenState extends State<RemindersScreen> {
     Widget reminderCard(Map<String, dynamic> r, {required bool isDue}) {
       final isBudget = r['kind'] == 'budget';
       final note = r['note'] as String? ?? '';
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final secondary = isDark
+          ? CashWiseTheme.darkSecondaryText
+          : CashWiseTheme.secondaryText;
+      // One-line details, amounts in their own right-aligned
+      // column: person on top, date/time below, amount aligned.
+      final person = r['person'] as String? ?? '';
+      final amount = (r['amount'] as num?)?.toDouble() ??
+          (r['threshold'] as num?)?.toDouble();
+      final date = DateTime.tryParse(r['date'] as String? ?? '');
+      final timeMinutes = r['timeMinutes'] as int?;
+      final detail = isBudget
+          ? strings.budgetReminder
+          : [
+              if (date != null) store.formatDate(date),
+              if (timeMinutes != null) store.formatMinutes(timeMinutes),
+            ].join(' • ');
       return Card(
         color: isDue
-            ? (store.isDarkMode
+            ? (isDark
                 ? const Color(0xFF3D2323)
                 : const Color(0xFFFDECEC))
             : null,
         margin: const EdgeInsets.only(bottom: 8),
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: isDue
-                ? const Color(0xFFFEE2E2)
-                : const Color(0xFFFEF3C7),
-            foregroundColor: isDue
-                ? CashWiseTheme.danger
-                : const Color(0xFF92400E),
-            child: Icon(
-              isBudget
-                  ? Icons.account_balance_wallet
-                  : Icons.handshake,
-            ),
-          ),
-          title: Text(
-            store.customReminderText(r),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          subtitle: note.isEmpty ? null : Text(note),
-          trailing: DeleteIconButton(
-            tooltip: strings.delete,
-            onPressed: () => store.removeCustomReminder(
-              r['id'] as String,
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: isDue
+                    ? (isDark
+                        ? const Color(0xFF4C1D1D)
+                        : const Color(0xFFFEE2E2))
+                    : (isDark
+                        ? const Color(0xFF451A03)
+                        : const Color(0xFFE3EDE8)),
+                foregroundColor: isDue
+                    ? CashWiseTheme.danger
+                    : (isDark
+                        ? const Color(0xFFFCD34D)
+                        : const Color(0xFF92400E)),
+                child: Icon(
+                  isBudget
+                      ? Icons.account_balance_wallet
+                      : Icons.handshake,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isBudget
+                          ? strings.budgetReminder
+                          : store.displayPerson(person),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (detail.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: secondary),
+                      ),
+                    ],
+                    if (amount != null)
+                      AmountRow(
+                        label: isBudget
+                            ? strings.remindWhenRemaining
+                            : strings.amount,
+                        amount: store.formatAmount(amount),
+                        labelStyle: TextStyle(color: secondary),
+                      ),
+                    if (note.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        note,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: secondary),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: DeleteIconButton(
+                  iconSize: 22,
+                  tooltip: strings.delete,
+                  onPressed: () => store.removeCustomReminder(
+                    r['id'] as String,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -128,7 +200,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
           );
         },
         icon: const Icon(Icons.add_alert),
-        label: Text(strings.addReminder),
+        label: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            strings.addReminder,
+            maxLines: 1,
+            softWrap: false,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -165,8 +244,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       child: Center(
                         child: Text(
                           strings.noReminders,
-                          style: const TextStyle(
-                            color: CashWiseTheme.secondaryText,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness ==
+                                    Brightness.dark
+                                ? CashWiseTheme.darkSecondaryText
+                                : CashWiseTheme.secondaryText,
                           ),
                         ),
                       ),

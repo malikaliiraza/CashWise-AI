@@ -22,6 +22,10 @@ class HistoryScreen extends StatelessWidget {
     final store = context.watch<ExpenseStore>();
     final strings = store.strings;
     final deleted = store.deletedHistory;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark
+        ? CashWiseTheme.darkSecondaryText
+        : CashWiseTheme.secondaryText;
 
     Widget sectionTitle(String title) {
       return Padding(
@@ -54,11 +58,9 @@ class HistoryScreen extends StatelessWidget {
                 children: [
                   sectionTitle(strings.budgetHistory),
                   if (store.budgets.isEmpty)
-                    const Text(
+                    Text(
                       '—',
-                      style: TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
+                      style: TextStyle(color: secondary),
                     )
                   else
                     ...store.budgets.map((b) {
@@ -68,8 +70,10 @@ class HistoryScreen extends StatelessWidget {
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: isActive
-                                ? CashWiseTheme.gold
-                                : CashWiseTheme.accentSoft,
+                                ? CashWiseTheme.lightAccent
+                                : isDark
+                                    ? CashWiseTheme.darkCard
+                                    : CashWiseTheme.accentSoft,
                             foregroundColor: isActive
                                 ? Colors.white
                                 : CashWiseTheme.lightAccent,
@@ -92,11 +96,13 @@ class HistoryScreen extends StatelessWidget {
                             '${store.formatAmount(store.budgetSpent(b))}'
                             ' • ${strings.remaining}: '
                             '${store.formatAmount(store.budgetRemaining(b))}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           trailing: isActive
                               ? const Icon(
                                   Icons.check_circle,
-                                  color: CashWiseTheme.gold,
+                                  color: CashWiseTheme.lightAccent,
                                 )
                               : const Icon(Icons.chevron_right),
                           onTap: () {
@@ -111,11 +117,9 @@ class HistoryScreen extends StatelessWidget {
                     }),
                   sectionTitle(strings.loanHistory),
                   if (store.udharEntries.isEmpty)
-                    const Text(
+                    Text(
                       '—',
-                      style: TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
+                      style: TextStyle(color: secondary),
                     )
                   else
                     ...store.udharEntries.map((entry) {
@@ -124,11 +128,19 @@ class HistoryScreen extends StatelessWidget {
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: entry.settled
-                                ? const Color(0xFFDCFCE7)
-                                : const Color(0xFFFEF3C7),
+                                ? (isDark
+                                    ? const Color(0xFF14532D)
+                                    : const Color(0xFFDCFCE7))
+                                : (isDark
+                                    ? const Color(0xFF451A03)
+                                    : const Color(0xFFE3EDE8)),
                             foregroundColor: entry.settled
-                                ? const Color(0xFF166534)
-                                : const Color(0xFF92400E),
+                                ? (isDark
+                                    ? const Color(0xFFBBF7D0)
+                                    : const Color(0xFF166534))
+                                : (isDark
+                                    ? const Color(0xFFFDE68A)
+                                    : const Color(0xFF92400E)),
                             child: Icon(
                               entry.isLent
                                   ? Icons.arrow_upward
@@ -159,17 +171,13 @@ class HistoryScreen extends StatelessWidget {
                   sectionTitle(strings.bin),
                   Text(
                     strings.binAutoRemove,
-                    style: const TextStyle(
-                      color: CashWiseTheme.secondaryText,
-                    ),
+                    style: TextStyle(color: secondary),
                   ),
                   const SizedBox(height: 8),
                   if (deleted.isEmpty)
                     Text(
                       strings.noDeletedItems,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
+                      style: TextStyle(color: secondary),
                     )
                   else
                     ...deleted.asMap().entries.map((e) {
@@ -180,8 +188,10 @@ class HistoryScreen extends StatelessWidget {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
-                          leading: const CircleAvatar(
-                            backgroundColor: Color(0xFFFEE2E2),
+                          leading: CircleAvatar(
+                            backgroundColor: isDark
+                                ? const Color(0xFF450A0A)
+                                : const Color(0xFFFEE2E2),
                             foregroundColor: CashWiseTheme.danger,
                             child: Icon(Icons.delete_outline),
                           ),
@@ -193,13 +203,22 @@ class HistoryScreen extends StatelessWidget {
                           ),
                           subtitle: Text(
                             '${store.formatAmount((item['amount'] as num?)?.toDouble() ?? 0)}'
-                            '${deletedAt == null ? '' : ' • ${store.formatDate(deletedAt)}'}'
+                            '${deletedAt == null ? '' : ' • ${shortDate(store, deletedAt)}'}'
                             ' • ${strings.daysLeftInBin(store.binDaysLeft(item))}',
                           ),
-                          trailing: TextButton.icon(
-                            icon: const Icon(Icons.restore, size: 18),
-                            label: Text(strings.restore),
-                            onPressed: () => store.restoreDeleted(i),
+                          trailing: SizedBox(
+                            height: 48,
+                            child: TextButton.icon(
+                              icon: const Icon(Icons.restore, size: 20),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  strings.restore,
+                                  maxLines: 1,
+                                ),
+                              ),
+                              onPressed: () => store.restoreDeleted(i),
+                            ),
                           ),
                         ),
                       );

@@ -1,4 +1,4 @@
-// CashWise AI — details page (v4.8).
+// Hisaab Kitaab — details page (v7.2).
 //
 // Three options, one screen: Expenses (default — the full list with
 // search, category filter and sort), AI Predictor (chart + cash-flow
@@ -7,17 +7,22 @@
 // / 100% overspend) shows as a banner at the top here, and the same
 // alert also fires a mobile notification on phones. The AppBar back
 // button returns home.
+//
+// Scoping (v7.2): pass [budgetId] and every tab reads ONLY that
+// budget's expenses and totals. Without it, the active budget is
+// used, exactly as before.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/amount_row.dart';
 import '../../../core/confirm_dialog.dart';
-import '../../../core/gradient_button.dart';
 import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import '../models/expense.dart';
 import 'add_expense_screen.dart';
+import 'budget_detail_screen.dart' show shortDate;
 import 'cashflow_predictor.dart';
 import 'category_chart.dart';
 import 'category_style.dart';
@@ -29,7 +34,11 @@ class StatisticsScreen extends StatefulWidget {
   /// page straight onto the tab they mean (v5.0).
   final int initialTab;
 
-  const StatisticsScreen({super.key, this.initialTab = 0});
+  /// Optional: scope the whole page to one budget (v7.2).
+  /// Null = the active budget, as before.
+  final String? budgetId;
+
+  const StatisticsScreen({super.key, this.initialTab = 0, this.budgetId});
 
   @override
   State<StatisticsScreen> createState() => _StatisticsScreenState();
@@ -61,15 +70,100 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     super.dispose();
   }
 
+  static Color _secondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? CashWiseTheme.darkSecondaryText
+          : CashWiseTheme.secondaryText;
+
+  /// Primary button (v7.2): fixed 48dp, label fully visible —
+  /// FittedBox scaleDown, one line, never ellipsised.
+  Widget _primaryButton({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    final enabled = onPressed != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: SizedBox(
+        height: 48,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: enabled
+                  ? const [Color(0xFF0C4444), Color(0xFF0F766E)]
+                  : const [Color(0xFF9CA3AF), Color(0xFF6B7280)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = context.watch<ExpenseStore>();
     final strings = store.strings;
-    final alert = store.alertMessage;
-    final isWarning = alert != null && store.spentFraction < 1;
+
+    // --- Scoped data (v7.2) ---
+    final scopedBudget = widget.budgetId == null
+        ? store.activeBudget
+        : store.budgets
+            .where((b) => b.id == widget.budgetId)
+            .firstOrNull ??
+            store.activeBudget;
+    final scopedExpenses = widget.budgetId == null
+        ? store.expenses
+        : store.expensesForBudget(widget.budgetId!);
+    final scopedBudgetAmount = scopedBudget?.amount ?? 0;
+    final scopedSpent =
+        scopedExpenses.fold(0.0, (sum, e) => sum + e.amountPkr);
+    final scopedRemaining = scopedBudgetAmount - scopedSpent;
+    final scopedFraction = scopedBudgetAmount <= 0
+        ? 0.0
+        : scopedSpent / scopedBudgetAmount;
+    final scopedDailyAverage = scopedBudget == null
+        ? store.dailyAverageSpend
+        : store.budgetDailyAverage(scopedBudget);
+    final scopedProjected = scopedBudget == null
+        ? store.projectedMonthEndSpend
+        : store.budgetProjectedMonthEnd(scopedBudget);
+    final alert = scopedFraction >= 1
+        ? strings.overspendAlert
+        : scopedFraction >= 0.8
+            ? strings.warningAlert
+            : null;
+    final isWarning = alert != null && scopedFraction < 1;
 
     final query = _searchQuery.trim().toLowerCase();
-    final filteredExpenses = store.expenses.where((e) {
+    final filteredExpenses = scopedExpenses.where((e) {
       final matchesCategory =
           _filterCategory == null || e.category == _filterCategory;
       final matchesQuery =
@@ -90,7 +184,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     final Map<String, double> byCategory = {};
-    for (final e in store.expenses) {
+    for (final e in scopedExpenses) {
       byCategory[e.category] =
           (byCategory[e.category] ?? 0) + e.amountPkr;
     }
@@ -99,59 +193,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         : byCategory.entries
             .reduce((a, b) => a.value >= b.value ? a : b);
 
-    Widget summaryRow(String label, String value) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: CashWiseTheme.secondaryText),
-            ),
-            Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      );
-    }
-
-    Widget tabChip(String key, String label) {
-      return ChoiceChip(
-        label: Text(label),
-        selected: _tab == key,
-        onSelected: (_) => setState(() => _tab = key),
-      );
-    }
-
     Widget expensesTab() {
       return Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: GradientButton(
+            child: _primaryButton(
               label: strings.addExpense,
               onPressed: () {
                 Navigator.of(context).push(
-                  slideRoute(const AddExpenseScreen()),
+                  slideRoute(
+                    AddExpenseScreen(budgetId: widget.budgetId),
+                  ),
                 );
               },
             ),
           ),
-          if (store.expenses.isNotEmpty) ...[
+          if (scopedExpenses.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: strings.searchHint,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _searchQuery.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: const Icon(Icons.clear, size: 20),
                           tooltip: strings.searchExpenses,
                           onPressed: () {
                             _searchController.clear();
@@ -169,9 +238,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: [
                   Text(
                     strings.sortBy,
-                    style: const TextStyle(
-                      color: CashWiseTheme.secondaryText,
-                    ),
+                    style: TextStyle(color: _secondary(context)),
                   ),
                   const SizedBox(width: 8),
                   DropdownButton<String>(
@@ -228,7 +295,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ),
             ),
           ],
-          if (store.expenses.isEmpty)
+          if (scopedExpenses.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
@@ -244,17 +311,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     Text(
                       strings.noExpenses,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
+                      style: TextStyle(color: _secondary(context)),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       strings.tapToAdd,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
+                      style: TextStyle(color: _secondary(context)),
                     ),
                   ],
                 ),
@@ -267,9 +330,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: Text(
                   strings.noMatchingExpenses,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: CashWiseTheme.secondaryText,
-                  ),
+                  style: TextStyle(color: _secondary(context)),
                 ),
               ),
             )
@@ -301,10 +362,18 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         size: 20,
                       ),
                     ),
-                    title: Text(expense.title),
+                    title: Text(
+                      expense.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // One clean line (v7.2): short date, so the
+                    // detail never wraps to three lines.
                     subtitle: Text(
                       '${strings.categoryName(expense.category)} • '
-                      '${store.formatDate(expense.date)}',
+                      '${shortDate(store, expense.date)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -356,9 +425,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     Widget predictorTab() {
       return Column(
         children: [
-          if (store.expenses.isNotEmpty)
-            CategoryChartCard(store: store),
-          CashFlowPredictorWithChart(store: store),
+          if (scopedExpenses.isNotEmpty)
+            CategoryChartCard(store: store, budgetId: widget.budgetId),
+          CashFlowPredictorWithChart(
+            store: store,
+            budgetId: widget.budgetId,
+          ),
         ],
       );
     }
@@ -379,32 +451,92 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              summaryRow(
-                strings.budget,
-                store.formatAmount(store.monthlyBudgetPkr),
+              AmountRow(
+                label: strings.budget,
+                amount: store.formatAmount(scopedBudgetAmount),
               ),
-              summaryRow(
-                strings.spentThisMonth,
-                store.formatAmount(store.totalSpent),
+              AmountRow(
+                label: strings.spentThisMonth,
+                amount: store.formatAmount(scopedSpent),
               ),
-              summaryRow(
-                strings.remaining,
-                store.formatAmount(store.remaining),
+              AmountRow(
+                label: strings.remaining,
+                amount: store.formatAmount(scopedRemaining),
               ),
-              summaryRow(
-                strings.dailyAverage,
-                store.formatAmount(store.dailyAverageSpend),
+              AmountRow(
+                label: strings.dailyAverage,
+                amount: store.formatAmount(scopedDailyAverage),
               ),
-              summaryRow(
-                strings.projectedMonthEnd,
-                store.formatAmount(store.projectedMonthEndSpend),
+              AmountRow(
+                label: strings.projectedMonthEnd,
+                amount: store.formatAmount(scopedProjected),
               ),
               if (topCategory != null)
-                summaryRow(
-                  strings.topCategory,
-                  strings.categoryName(topCategory.key),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(strings.topCategory),
+                      ),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          '${strings.categoryName(topCategory.key)} — '
+                          '${store.formatAmount(topCategory.value)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
+          ),
+        ),
+      );
+    }
+
+    // The three tabs in ONE prominent line (v7.2): a 3-way
+    // segmented control of equal Expanded buttons, 13px labels
+    // that scale down instead of wrapping — "Summary" never
+    // drops to a second line.
+    Widget tabSegment(String key, String label) {
+      final selected = _tab == key;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => _tab = key),
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: selected
+                  ? CashWiseTheme.lightAccent
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight:
+                      selected ? FontWeight.bold : FontWeight.w600,
+                  color: selected
+                      ? Colors.white
+                      : Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+            ),
           ),
         ),
       );
@@ -433,6 +565,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         children: [
                           Icon(
                             Icons.warning_amber,
+                            size: 20,
                             color: isWarning
                                 ? CashWiseTheme.warning
                                 : CashWiseTheme.danger,
@@ -455,13 +588,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      tabChip('expenses', strings.expenses),
-                      tabChip('predictor', strings.aiPredictor),
-                      tabChip('summary', strings.summary),
-                    ],
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        tabSegment('expenses', strings.expenses),
+                        tabSegment('predictor', strings.aiPredictor),
+                        tabSegment('summary', strings.summary),
+                      ],
+                    ),
                   ),
                 ),
                 if (_tab == 'expenses')

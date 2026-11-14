@@ -1,15 +1,16 @@
-// CashWise AI — cash-flow predictor card (DRAFT, Tue 10 Nov 2026).
+// Hisaab Kitaab — cash-flow predictor card (v7.2).
 // Local rule-based prediction only: daily average spend x days in the
 // month. No server, no AI model, no network — it works offline.
 // Place at: lib/features/expenses/presentation/cashflow_predictor.dart
 
 import 'package:flutter/material.dart';
 
-import '../../../core/gradient_button.dart';
+import '../../../core/amount_row.dart';
 import '../../../core/page_transitions.dart';
 import '../../../core/theme.dart';
 import '../data/expense_store.dart';
 import 'add_expense_screen.dart';
+import 'budget_detail_screen.dart' show shortDate;
 import 'category_chart.dart';
 
 /// Predicts, before the month ends, when the money will run out.
@@ -19,22 +20,67 @@ import 'category_chart.dart';
 /// - Run-out date = today + (remaining / daily average), when that
 ///   date falls inside this month.
 /// All labels come from the current locale only; the run-out date is
-/// shown numerically (day/month/year) so no month name mixes languages.
+/// shown short ("12 Nov 2026") so it never wraps mid-phrase.
 class CashFlowPredictorCard extends StatelessWidget {
   final ExpenseStore store;
 
-  const CashFlowPredictorCard({super.key, required this.store});
+  /// Optional: predict only this budget's pace (v7.2). Null =
+  /// the active budget, as before.
+  final String? budgetId;
+
+  const CashFlowPredictorCard({super.key, required this.store, this.budgetId});
 
   @override
   Widget build(BuildContext context) {
     final strings = store.strings;
-    final hasExpenses = store.expenses.isNotEmpty;
-    final willRunOut = store.willOverspend;
-    final runOut = store.predictedRunOutDate;
-    final alreadySpent = store.spentFraction >= 1;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Scoped values (v7.2): when a budgetId is given, every
+    // number comes from that budget alone.
+    final scopedBudget = budgetId == null
+        ? store.activeBudget
+        : store.budgets
+            .where((b) => b.id == budgetId)
+            .firstOrNull ??
+            store.activeBudget;
+    final scopedExpenses = budgetId == null
+        ? store.expenses
+        : store.expensesForBudget(budgetId!);
+    final scopedBudgetAmount = scopedBudget?.amount ?? 0;
+    final scopedSpent = scopedExpenses.fold(
+        0.0, (sum, e) => sum + e.amountPkr);
+    final scopedRemaining = scopedBudgetAmount - scopedSpent;
+    final scopedFraction = scopedBudgetAmount <= 0
+        ? 0.0
+        : scopedSpent / scopedBudgetAmount;
+    final scopedDailyAverage = scopedBudget == null
+        ? store.dailyAverageSpend
+        : store.budgetDailyAverage(scopedBudget);
+    final scopedProjected = scopedBudget == null
+        ? store.projectedMonthEndSpend
+        : store.budgetProjectedMonthEnd(scopedBudget);
+    final scopedWillRunOut = scopedExpenses.isNotEmpty &&
+        scopedFraction < 1 &&
+        scopedProjected > scopedBudgetAmount;
+    DateTime? scopedRunOut;
+    if (scopedExpenses.isNotEmpty &&
+        scopedDailyAverage > 0 &&
+        scopedRemaining > 0) {
+      final daysLeft = (scopedRemaining / scopedDailyAverage).ceil();
+      final now = DateTime.now();
+      final runOut = now.add(Duration(days: daysLeft));
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+      final monthEnd = DateTime(now.year, now.month, daysInMonth);
+      if (!runOut.isAfter(monthEnd)) scopedRunOut = runOut;
+    }
+    final hasExpenses = scopedExpenses.isNotEmpty;
+    final willRunOut = scopedWillRunOut;
+    final runOut = scopedRunOut;
+    final alreadySpent = scopedFraction >= 1;
 
     final statusColor = !hasExpenses
-        ? CashWiseTheme.secondaryText
+        ? (isDark
+            ? CashWiseTheme.darkSecondaryText
+            : CashWiseTheme.secondaryText)
         : alreadySpent || willRunOut
             ? CashWiseTheme.danger
             : CashWiseTheme.accentFor(context);
@@ -79,22 +125,31 @@ class CashFlowPredictorCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
+                  color: isDark
+                      ? const Color(0xFF451A03)
+                      : const Color(0xFFE3EDE8),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF59E0B)),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFFF59E0B)
+                        : const Color(0xFFF59E0B),
+                  ),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.warning_amber_rounded,
+                      size: 20,
                       color: Color(0xFF92400E),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         statusText,
-                        style: const TextStyle(
-                          color: Color(0xFF92400E),
+                        style: TextStyle(
+                          color: isDark
+                              ? const Color(0xFFFDE68A)
+                              : const Color(0xFF92400E),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -103,13 +158,18 @@ class CashFlowPredictorCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              GradientButton(
-                label: strings.addExpense,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    slideRoute(const AddExpenseScreen()),
-                  );
-                },
+              SizedBox(
+                height: 48,
+                child: _PrimaryButton(
+                  label: strings.addExpense,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      slideRoute(
+                        AddExpenseScreen(budgetId: budgetId),
+                      ),
+                    );
+                  },
+                ),
               ),
             ] else
               Text(
@@ -121,60 +181,82 @@ class CashFlowPredictorCard extends StatelessWidget {
               ),
             if (hasExpenses) ...[
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    strings.projectedMonthEnd,
-                    style: const TextStyle(
-                      color: CashWiseTheme.secondaryText,
-                    ),
-                  ),
-                  Text(
-                    store.formatAmount(store.projectedMonthEndSpend),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
+              // AmountRow (v7.2): the label wraps, the amount
+              // stays in its own right-aligned column — the two
+              // can never run together.
+              AmountRow(
+                label: strings.projectedMonthEnd,
+                amount: store.formatAmount(scopedProjected),
               ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    strings.dailyAverage,
-                    style: const TextStyle(
-                      color: CashWiseTheme.secondaryText,
-                    ),
-                  ),
-                  Text(
-                    store.formatAmount(store.dailyAverageSpend),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
+              AmountRow(
+                label: strings.dailyAverage,
+                amount: store.formatAmount(scopedDailyAverage),
               ),
-              if (runOut != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      strings.budgetRunsOut,
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
-                      ),
-                    ),
-                    Text(
-                      store.formatDate(runOut),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: CashWiseTheme.danger,
-                      ),
-                    ),
-                  ],
+              if (runOut != null)
+                AmountRow(
+                  label: strings.budgetRunsOut,
+                  amount: shortDate(store, runOut),
+                  amountStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: CashWiseTheme.danger,
+                  ),
                 ),
-              ],
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Primary button (v7.2): fixed 48dp, label fully visible —
+/// FittedBox scaleDown, one line, never ellipsised.
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _PrimaryButton({required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: enabled
+                ? const [Color(0xFF0C4444), Color(0xFF0F766E)]
+                : const [Color(0xFF9CA3AF), Color(0xFF6B7280)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -186,14 +268,21 @@ class CashFlowPredictorCard extends StatelessWidget {
 class CashFlowPredictorWithChart extends StatelessWidget {
   final ExpenseStore store;
 
-  const CashFlowPredictorWithChart({super.key, required this.store});
+  /// Optional: scope predictor + chart to one budget (v7.2).
+  final String? budgetId;
+
+  const CashFlowPredictorWithChart({
+    super.key,
+    required this.store,
+    this.budgetId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        CashFlowPredictorCard(store: store),
-        CategoryChartCard(store: store),
+        CashFlowPredictorCard(store: store, budgetId: budgetId),
+        CategoryChartCard(store: store, budgetId: budgetId),
       ],
     );
   }

@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/amount_row.dart';
 import '../../../core/gradient_button.dart';
 import '../../../core/styled_date_picker.dart';
 import '../../../core/theme.dart';
@@ -192,11 +193,14 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      '${strings.remaining}: '
-                      '${store.formatAmount(store.remaining)}',
-                      style: const TextStyle(
-                        color: CashWiseTheme.secondaryText,
+                    AmountRow(
+                      label: strings.remaining,
+                      amount: store.formatAmount(store.remaining),
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness ==
+                                Brightness.dark
+                            ? CashWiseTheme.darkSecondaryText
+                            : CashWiseTheme.secondaryText,
                       ),
                     ),
                   ] else ...[
@@ -232,8 +236,15 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                                 setState(() => _date = picked);
                               }
                             },
-                            icon: const Icon(Icons.calendar_today),
-                            label: Text(store.formatDate(_date)),
+                            icon: const Icon(Icons.calendar_today, size: 20),
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                store.formatDate(_date),
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -248,11 +259,16 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                                 setState(() => _time = picked);
                               }
                             },
-                            icon: const Icon(Icons.access_time),
-                            label: Text(
-                              _time == null
-                                  ? strings.setDueTime
-                                  : store.formatTimeOfDay(_time!),
+                            icon: const Icon(Icons.access_time, size: 20),
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                _time == null
+                                    ? strings.setDueTime
+                                    : store.formatTimeOfDay(_time!),
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
                             ),
                           ),
                         ),
